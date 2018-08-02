@@ -95,12 +95,12 @@ public:
       return mat;
   }
 
-  constexpr int rows()
+  constexpr size_t rows()
   {
       return Rows;
   }
 
-  constexpr int cols()
+  constexpr size_t cols()
   {
       return Columns;
   }
