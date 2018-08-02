@@ -25,6 +25,8 @@ class Matrix
     size_t m_rows = 0; // Should be initialised.
     size_t m_cols = 0;
 
+    using this_type = Matrix<T, Rows, Columns>;
+
 /*******************************************************************************
  * Constructors.
  ******************************************************************************/
@@ -63,6 +65,11 @@ public:
         m_data(init);
     }
 
+    friend this_type operator*(const this_type& lhs, const this_type& rhs)
+    {
+        return lhs;
+    }
+
     // Destructor.
     ~Matrix()
     {
@@ -77,12 +84,6 @@ public:
       return m_data.at(rowIndex * Columns + columnIndex);
   }  
 }; // end template class Matrix
-
-    template <typename Matrix>
-Matrix operator*(const Matrix& lhs, const Matrix& rhs)
-{
-    return lhs;
-}
 
 } // end namespace mat
 
