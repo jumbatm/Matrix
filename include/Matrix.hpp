@@ -81,7 +81,7 @@ public:
 /*******************************************************************************
  * Public interface
  ******************************************************************************/
-  T& at(size_t rowIndex, size_t columnIndex)
+  T& at(const size_t rowIndex, const size_t columnIndex)
   {
       return m_data.at(rowIndex * Columns + columnIndex);
   }  
@@ -94,6 +94,16 @@ public:
           mat.m_data[i] = lhs.m_data[i] * rhs.m_data[i];
       }
       return mat;
+  }
+
+  constexpr int rows()
+  {
+      return Rows;
+  }
+
+  constexpr int cols()
+  {
+      return Columns;
   }
 }; // end template class Matrix
 
