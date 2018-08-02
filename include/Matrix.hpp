@@ -1,11 +1,12 @@
+#pragma once
 #ifndef JUMBATM_MATRIX_H_INCLUDED // Begin Header guard.
 #define JUMBATM_MATRIX_H_INCLUDED
-#pragma once // Technically non-standard.
 
 #include <initializer_list>
 #include <cstddef>
 #include <array>
 #include <stdexcept>
+#include <utility>
 
 namespace mat
 {
@@ -22,10 +23,8 @@ class Matrix
 {
     std::array<T, Rows*Columns> m_data{};
 
-    size_t m_rows = 0; // Should be initialised.
-    size_t m_cols = 0;
-
     using this_type = Matrix<T, Rows, Columns>;
+    using data_type = decltype(m_data);
 
 /*******************************************************************************
  * Constructors.
@@ -37,13 +36,10 @@ class Matrix
    // the implicit move assignment and constructor, we must also provide those.
  
 public: 
-
     Matrix() = default;
 
     // Construct from nested initializer_list.
-    Matrix(const std::initializer_list<std::initializer_list<T>>& init) : 
-        m_rows(init.size()), 
-        m_cols(init.begin()->size())
+    Matrix(const std::initializer_list<std::initializer_list<T>>& init)
     {
         size_t index = 0;
         for (auto& row : init)
@@ -58,17 +54,23 @@ public:
     // { {1}, 
     //   {2}, 
     //   {3} };
-    Matrix(const std::initializer_list<T>& init) :
-        m_rows(1),
-        m_cols(init.size())
+    Matrix(const std::initializer_list<T>& init)
     {
         m_data(init);
     }
 
-    friend this_type operator*(const this_type& lhs, const this_type& rhs)
+    // Copy constructor.
+    Matrix(const this_type& other) :
+        m_data(other.m_data)
     {
-        return lhs;
     }
+
+    // Move constructor.
+    Matrix(this_type&& other) :
+        m_data(std::move(other.m_data))
+    {
+    }
+
 
     // Destructor.
     ~Matrix()
@@ -83,6 +85,16 @@ public:
   {
       return m_data.at(rowIndex * Columns + columnIndex);
   }  
+
+  friend this_type operator*(const this_type& lhs, const this_type& rhs)
+  {
+      this_type mat;
+      for (size_t i = 0; i < lhs.m_data.size(); ++i)
+      {
+          mat.m_data[i] = lhs.m_data[i] * rhs.m_data[i];
+      }
+      return mat;
+  }
 }; // end template class Matrix
 
 } // end namespace mat
