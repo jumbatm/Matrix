@@ -15,15 +15,15 @@ namespace mat
         template <typename E>
             struct _expression
             {
-                    auto at(size_t row, size_t column) const
-                    {
-                        return static_cast<const E&>(*this).at(row, column);
-                    }
+                auto at(size_t row, size_t column) const
+                {
+                    return static_cast<const E&>(*this).at(row, column);
+                }
 
-                    auto operator[](size_t index) const
-                    {
-                        return static_cast<const E&>(*this).m_data[index];
-                    }
+                auto operator[](size_t index) const
+                {
+                    return static_cast<const E&>(*this).m_data[index];
+                }
             };
     } // end namespace detail
 
