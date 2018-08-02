@@ -86,12 +86,4 @@ Matrix operator*(const Matrix& lhs, const Matrix& rhs)
 
 } // end namespace mat
 
-template <typename T>
-struct test 
-{
-    T data;
-    test(const T& data_) : data(data_) {}
-};
-
-
 #endif // Header guard.
