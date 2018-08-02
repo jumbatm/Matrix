@@ -10,6 +10,24 @@
 
 namespace mat
 {
+    namespace detail
+    {
+    template <typename E>
+    struct _expression
+    {
+        template <typename E_> // Templated yet again as E is an incomplete type at this stage.
+        typename E_::value_type& at(size_t row, size_t column)
+        {
+            return static_cast<const E&>(*this).at(row, column);
+        }
+
+        template <typename E_>
+        typename E_::value_type& operator[](size_t index)
+        {
+            return static_cast<const E&>(*this).m_data[index];
+        }
+    };
+    } // end namespace detail
 
 /*******************************************************************************
  * Matrix:
@@ -19,23 +37,24 @@ namespace mat
  * are taught in the subject.
  ******************************************************************************/
 template <typename T, size_t Rows, size_t Columns>
-class Matrix
+class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
 {
     std::array<T, Rows*Columns> m_data{};
 
     using this_type = Matrix<T, Rows, Columns>;
     using data_type = decltype(m_data);
 
+    friend class detail::_expression<this_type>;
+
 /*******************************************************************************
  * Constructors.
  ******************************************************************************/
-
+public: 
    // Rule of 5: Any class which requires a user-defined destructor,
    // copy-constructor or copy-assignment operator almost certainly requires all
    // three. And, as user definition of the copy-assignment operator suppresses
    // the implicit move assignment and constructor, we must also provide those.
  
-public: 
     Matrix() = default;
 
     // Construct from nested initializer_list.
@@ -71,6 +90,17 @@ public:
     {
     }
 
+    // Construct from an expression.
+    template <typename MatrixType>
+    Matrix(const detail::_expression<MatrixType>& expr)
+    {
+        size_t i = 0;
+        for (auto& elem : expr)
+        {
+            m_data[i++] = std::move(elem);
+        }
+    }
+
     // Destructor.
     ~Matrix()
     {
@@ -80,6 +110,7 @@ public:
 /*******************************************************************************
  * Public interface
  ******************************************************************************/
+public:
   T& at(const size_t rowIndex, const size_t columnIndex)
   {
       return m_data.at(rowIndex * Columns + columnIndex);
@@ -117,7 +148,13 @@ public:
   {
       return m_data.end();
   }
+/*******************************************************************************
+ * Convenience typedefs.
+ ******************************************************************************/
+  using value_type = T;
+
 }; // end template class Matrix
+
 
 } // end namespace mat
 
