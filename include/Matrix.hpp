@@ -8,6 +8,14 @@
 #include <stdexcept>
 #include <utility>
 
+/*******************************************************************************
+ * Matrix:
+ *
+ * A statically-sized matrix type developed for a class on parallel processing
+ * at university. Each week, this implementation is improved with concepts that
+ * are taught in the subject.
+ ******************************************************************************/
+
 namespace mat
 {
     namespace detail
@@ -27,13 +35,6 @@ namespace mat
             };
     } // end namespace detail
 
-    /*******************************************************************************
-     * Matrix:
-     *
-     * A statically-sized matrix type developed for a class on parallel processing
-     * at university. Each week, this implementation is improved with concepts that
-     * are taught in the subject.
-     ******************************************************************************/
     template <typename T, size_t Rows, size_t Columns>
         class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
     {
