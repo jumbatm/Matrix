@@ -74,6 +74,7 @@ public:
     {
     }
 
+
 /*******************************************************************************
  * Public interface
  ******************************************************************************/
@@ -81,7 +82,14 @@ public:
   {
       return m_data.at(rowIndex * Columns + columnIndex);
   }  
-};
+}; // end template class Matrix
+
+    template <typename Matrix>
+Matrix operator*(const Matrix& lhs, const Matrix& rhs)
+{
+    return lhs;
+}
+
 } // end namespace mat
 
 template <typename T>
