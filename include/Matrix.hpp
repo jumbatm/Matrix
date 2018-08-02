@@ -26,7 +26,7 @@ enum _rowOrVectorSpecifier
 template <typename T, size_t Rows, size_t Columns>
 class Matrix
 {
-    std::array<T, Rows*Columns> m_data;
+    std::array<T, Rows*Columns> m_data{};
 
     size_t m_rows = 0; // Should be initialised.
     size_t m_cols = 0;
@@ -41,14 +41,9 @@ class Matrix
    // the implicit move assignment and constructor, we must also provide those.
  
 public: 
-    Matrix(const size_t rows, const size_t columns) : 
-        m_rows(rows), 
-        m_cols(columns)
-    {
-        rows * columns == 0 ? throw std::runtime_error("Cannot have a zero-sized row or column!") : (void)0;
-    }
 
-public: 
+    Matrix() = default;
+
     // Construct from nested initializer_list.
     Matrix(const std::initializer_list<std::initializer_list<T>>& init) : 
         m_rows(init.size()), 
