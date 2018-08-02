@@ -71,7 +71,6 @@ public:
     {
     }
 
-
     // Destructor.
     ~Matrix()
     {
@@ -104,6 +103,19 @@ public:
   constexpr int cols()
   {
       return Columns;
+  }
+
+/*******************************************************************************
+ * Ranged for-loop / iterator support.
+ ******************************************************************************/
+  auto begin()
+  {
+      return m_data.begin();
+  }
+
+  auto end()
+  {
+      return m_data.end();
   }
 }; // end template class Matrix
 
