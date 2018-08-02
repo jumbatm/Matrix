@@ -49,10 +49,6 @@ namespace mat
          * Constructors.
          ******************************************************************************/
         public: 
-        // Rule of 5: Any class which requires a user-defined destructor,
-        // copy-constructor or copy-assignment operator almost certainly requires all
-        // three. And, as user definition of the copy-assignment operator suppresses
-        // the implicit move assignment and constructor, we must also provide those.
 
         Matrix() = default;
 
@@ -77,18 +73,6 @@ namespace mat
             m_data(init);
         }
 
-        // Copy constructor.
-        Matrix(const this_type& other) :
-            m_data(other.m_data)
-        {
-        }
-
-        // Move constructor.
-        Matrix(this_type&& other) :
-            m_data(std::move(other.m_data))
-        {
-        }
-
         // Construct from an expression.
         template <typename MatrixType>
             Matrix(const detail::_expression<MatrixType>& expr)
@@ -99,12 +83,6 @@ namespace mat
                     m_data[i++] = std::move(elem);
                 }
             }
-
-        // Destructor.
-        ~Matrix()
-        {
-        }
-
 
         /*******************************************************************************
          * Public interface
