@@ -8,7 +8,7 @@
 
 using namespace mat;
 
-namespace
+namespace // Test helpers.
 {
 
 // For testing, bypassing the use of iterators.
@@ -20,6 +20,16 @@ void mat_for_each(Matrix<T, Rows, Columns>& mat, Function&& f)
     {
         f(mat.at(i, j));
     }
+}
+
+template <typename Matrix>
+void initialise_random(Matrix& m)
+{
+    static std::random_device rd;
+    mat_for_each(m, [](auto& elem)
+    {
+        elem = rd();  
+    });
 }
 
 } // end namespace <anonymous>
@@ -36,11 +46,10 @@ TEST_CASE("Construct Matrix with values")
 
     int expectedValue = 1;
     
-    for (size_t i = 0; i < 3; ++i)
-    for (size_t j = 0; j < 3; ++j)
-    {
-        REQUIRE(m.at(i, j) == expectedValue++);
-    }
+    mat_for_each(m, [&expectedValue](int& param) 
+            {
+            REQUIRE(param == expectedValue++);
+            });
 
 }
 
@@ -65,10 +74,12 @@ TEST_CASE("Matrices are zero-initialised, no matter the size")
 TEST_CASE("Element-wise multiplication yields the expected results")
 {
     constexpr int MATRIX_SIZE = 100;
-    std::random_device rd;
 
     Matrix<int, MATRIX_SIZE, MATRIX_SIZE> m;
+    initialise_random(m);
+
     decltype(m) a;
+    initialise_random(a);
 
     auto t = m * a;
     
