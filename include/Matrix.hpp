@@ -10,12 +10,6 @@
 namespace mat
 {
 
-enum _rowOrVectorSpecifier
-{
-    ROW_VECTOR,
-    COLUMN_VECTOR
-};
-
 /*******************************************************************************
  * Matrix:
  *
