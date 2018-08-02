@@ -15,14 +15,12 @@ namespace mat
         template <typename E>
             struct _expression
             {
-                template <typename E_> // Templated yet again as E is an incomplete type at this stage.
-                    typename E_::value_type& at(size_t row, size_t column)
+                    auto at(size_t row, size_t column) const
                     {
                         return static_cast<const E&>(*this).at(row, column);
                     }
 
-                template <typename E_>
-                    typename E_::value_type& operator[](size_t index)
+                    auto operator[](size_t index) const
                     {
                         return static_cast<const E&>(*this).m_data[index];
                     }
@@ -168,7 +166,7 @@ namespace mat
                 return lhs[index] * rhs[index];
             }
 
-            auto& at(size_t row, size_t column)
+            auto at(size_t row, size_t column)
             {
                 size_t idx = LeftExpr::convertToFlatIndex(row, column);
                 return lhs[idx] * rhs[idx];
@@ -182,7 +180,7 @@ namespace mat
                 return _matrixDotProduct<E1, E2>(left, right);
             }
 
-    }
+    } // end namespace detail
 
 } // end namespace mat
 
