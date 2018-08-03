@@ -109,17 +109,21 @@ template <typename LeftExpr, typename RightExpr>
 struct _matrixDotProduct;
 
 template <template <class, size_t, size_t> typename LeftExpr,
-          template <class, size_t, size_t> typename RightExpr, size_t Rows,
-          size_t Columns, typename LeftType, typename RightType>
-struct _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
-                         RightExpr<RightType, Rows, Columns>>
+          template <class, size_t, size_t> typename RightExpr, size_t LeftRows,
+          size_t LeftColumns, size_t RightRows, size_t RightColumns,
+          typename LeftType, typename RightType>
+struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
+                         RightExpr<RightType, RightRows, RightColumns>>
     : public _expression<
-          _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
-                            RightExpr<RightType, Rows, Columns>>> {
+          _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
+                            RightExpr<RightType, RightRows, RightColumns>>> {
+  static_assert(LeftRows == RightRows && LeftColumns == RightColumns,
+                "Matrices must be the same size.");
+
   using value_type = decltype(LeftType{} * RightType{});
 
-  using left_type = LeftExpr<LeftType, Rows, Columns>;
-  using right_type = RightExpr<RightType, Rows, Columns>;
+  using left_type = LeftExpr<LeftType, LeftRows, LeftColumns>;
+  using right_type = RightExpr<RightType, RightRows, RightColumns>;
 
   const left_type &lhs;
   const right_type &rhs;
@@ -134,7 +138,7 @@ struct _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
     return lhs[idx] * rhs[idx];
   }
 
-  constexpr size_t size() const { return Rows * Columns; }
+  constexpr size_t size() const { return LeftRows * LeftColumns; }
 };
 
 template <typename E1, typename E2>
