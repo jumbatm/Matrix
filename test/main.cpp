@@ -91,7 +91,7 @@ TEST_CASE("Element-wise multiplication yields the expected results")
     decltype(m) a;
     initialise_random(a);
 
-    auto /*Matrix<int, 100, 100>*/ t = m * a;
+    Matrix<int, 100, 100> t = m * a; // Force conversion of expression to Matrix.
 
     for (size_t i = 0; i < MATRIX_SIZE; ++i)
         for (size_t j = 0; j < MATRIX_SIZE; ++j)
