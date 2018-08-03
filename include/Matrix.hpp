@@ -23,14 +23,19 @@ namespace mat
         template <typename E>
             struct _expression
             {
-                auto at(size_t row, size_t column) const
-                {
+                auto at(size_t row, size_t column) const {
                     return static_cast<const E&>(*this).at(row, column);
                 }
 
-                auto operator[](size_t index) const
+                template <typename E_ = E>
+                typename E_::value_type operator[](size_t index) const
                 {
-                    return static_cast<const E&>(*this).m_data[index];
+                    return static_cast<const E&>(*this)[index];
+                }
+
+                size_t size() const
+                {
+                    return static_cast<const E&>(*this).size();
                 }
             };
     } // end namespace detail
@@ -49,7 +54,7 @@ namespace mat
          * Constructors.
          ******************************************************************************/
         public: 
-
+using value_type = T;
         Matrix() = default;
 
         // Construct from nested initializer_list.
@@ -77,10 +82,9 @@ namespace mat
         template <typename MatrixType>
             Matrix(const detail::_expression<MatrixType>& expr)
             {
-                size_t i = 0;
-                for (auto& elem : expr)
+                for (size_t i = 0; i < expr.size(); ++i)
                 {
-                    m_data[i++] = std::move(elem);
+                    m_data[i] = expr[i];
                 }
             }
 
@@ -122,15 +126,17 @@ namespace mat
         /*******************************************************************************
          * Convenience typedefs.
          ******************************************************************************/
-        using value_type = T;
 
     }; // end template class Matrix
 
     namespace detail
     {
-        template <typename LeftExpr, typename RightExpr>
-            struct _matrixDotProduct : public _expression<_matrixDotProduct<LeftExpr, RightExpr>>
+
+        template <typename LeftExpr, typename RightExpr, typename ReturnType>
+            struct _matrixDotProduct : public _expression<_matrixDotProduct<LeftExpr, RightExpr, ReturnType>>
         {
+            using value_type = ReturnType;
+
             const LeftExpr& lhs;
             const RightExpr& rhs;
 
@@ -140,23 +146,23 @@ namespace mat
             {
             }
 
-            auto operator[](size_t index)
+            value_type operator[](size_t index) const
             {
                 return lhs[index] * rhs[index];
             }
 
-            auto at(size_t row, size_t column)
+            value_type at(size_t row, size_t column)
             {
                 size_t idx = LeftExpr::convertToFlatIndex(row, column);
                 return lhs[idx] * rhs[idx];
             }
+
         };
 
-
         template <typename E1, typename E2>
-            _matrixDotProduct<E1, E2> operator*(const E1& left, const E2& right)
+            auto operator*(const E1& left, const E2& right)
             {
-                return _matrixDotProduct<E1, E2>(left, right);
+                return _matrixDotProduct<E1, E2, double>(left, right);
             }
 
     } // end namespace detail
