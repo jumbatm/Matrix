@@ -1,10 +1,10 @@
 #pragma once
-#ifndef JUMBATM_MATRIX_H_INCLUDED // Begin Header guard.
+#ifndef JUMBATM_MATRIX_H_INCLUDED  // Begin Header guard.
 #define JUMBATM_MATRIX_H_INCLUDED
 
-#include <initializer_list>
-#include <cstddef>
 #include <array>
+#include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
 #include <utility>
 
@@ -16,157 +16,128 @@
  * are taught in the subject.
  ******************************************************************************/
 
-namespace mat
-{
-    namespace detail
-    {
-        template <typename E>
-            struct _expression
-            {
-                auto at(size_t row, size_t column) const {
-                    return static_cast<const E&>(*this).at(row, column);
-                }
+namespace mat {
+namespace detail {
+template <typename E>
+struct _expression {
+  auto at(size_t row, size_t column) const {
+    return static_cast<const E &>(*this).at(row, column);
+  }
 
-                template <typename E_ = E>
-                typename E_::value_type operator[](size_t index) const
-                {
-                    return static_cast<const E&>(*this)[index];
-                }
+  template <typename E_ = E>
+  typename E_::value_type operator[](size_t index) const {
+    return static_cast<const E &>(*this)[index];
+  }
 
-                size_t size() const
-                {
-                    return static_cast<const E&>(*this).size();
-                }
-            };
-    } // end namespace detail
+  size_t size() const { return static_cast<const E &>(*this).size(); }
+};
+}  // end namespace detail
 
-    template <typename T, size_t Rows, size_t Columns>
-        class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
-    {
-        std::array<T, Rows*Columns> m_data{};
+template <typename T, size_t Rows, size_t Columns>
+class Matrix : public detail::_expression<Matrix<T, Rows, Columns>> {
+  std::array<T, Rows * Columns> m_data{};
 
-        using this_type = Matrix<T, Rows, Columns>;
-        using data_type = decltype(m_data);
+  using this_type = Matrix<T, Rows, Columns>;
+  using data_type = decltype(m_data);
 
-        friend class detail::_expression<this_type>;
+  friend class detail::_expression<this_type>;
 
-        /*******************************************************************************
-         * Constructors.
-         ******************************************************************************/
-        public: 
-using value_type = T;
-        Matrix() = default;
+  /*******************************************************************************
+   * Constructors.
+   ******************************************************************************/
+ public:
+  using value_type = T;
+  Matrix() = default;
 
-        // Construct from nested initializer_list.
-        Matrix(const std::initializer_list<std::initializer_list<T>>& init)
-        {
-            size_t index = 0;
-            for (auto& row : init)
-                for (auto& value : row)
-                {
-                    m_data[index++] = value; 
-                }
-        }
+  // Construct from nested initializer_list.
+  Matrix(const std::initializer_list<std::initializer_list<T>> &init) {
+    size_t index = 0;
+    for (auto &row : init)
+      for (auto &value : row) {
+        m_data[index++] = value;
+      }
+  }
 
-        // If we're provided with a single dimension, assume that it's a row vector.
-        // That way, column vectors can be declared like:
-        // { {1}, 
-        //   {2}, 
-        //   {3} };
-        Matrix(const std::initializer_list<T>& init)
-        {
-            m_data(init);
-        }
+  // If we're provided with a single dimension, assume that it's a row vector.
+  // That way, column vectors can be declared like:
+  // { {1},
+  //   {2},
+  //   {3} };
+  Matrix(const std::initializer_list<T> &init) { m_data(init); }
 
-        // Construct from an expression.
-        template <typename MatrixType>
-            Matrix(const detail::_expression<MatrixType>& expr)
-            {
-                for (size_t i = 0; i < expr.size(); ++i)
-                {
-                    m_data[i] = expr[i];
-                }
-            }
+  // Construct from an expression.
+  template <typename MatrixType>
+  Matrix(const detail::_expression<MatrixType> &expr) {
+    for (size_t i = 0; i < expr.size(); ++i) {
+      m_data[i] = expr[i];
+    }
+  }
 
-        /*******************************************************************************
-         * Public interface
-         ******************************************************************************/
-        public:
-        static size_t convertToFlatIndex(size_t rowIndex, size_t columnIndex)
-        {
-            return rowIndex * Columns + columnIndex;
-        }
-        T& at(const size_t rowIndex, const size_t columnIndex)
-        {
-            return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
-        }  
+  /*******************************************************************************
+   * Public interface
+   ******************************************************************************/
+ public:
+  static size_t convertToFlatIndex(size_t rowIndex, size_t columnIndex) {
+    return rowIndex * Columns + columnIndex;
+  }
+  T &at(const size_t rowIndex, const size_t columnIndex) {
+    return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
+  }
 
-        constexpr int rows()
-        {
-            return Rows;
-        }
+  constexpr int rows() { return Rows; }
 
-        constexpr int cols()
-        {
-            return Columns;
-        }
+  constexpr int cols() { return Columns; }
 
-        /*******************************************************************************
-         * Ranged for-loop / iterator support.
-         ******************************************************************************/
-        auto begin()
-        {
-            return m_data.begin();
-        }
+  /*******************************************************************************
+   * Ranged for-loop / iterator support.
+   ******************************************************************************/
+  auto begin() { return m_data.begin(); }
 
-        auto end()
-        {
-            return m_data.end();
-        }
-        /*******************************************************************************
-         * Convenience typedefs.
-         ******************************************************************************/
+  auto end() { return m_data.end(); }
+  /*******************************************************************************
+   * Convenience typedefs.
+   ******************************************************************************/
 
-    }; // end template class Matrix
+};  // end template class Matrix
 
-    namespace detail
-    {
+namespace detail {
+template <typename LeftExpr, typename RightExpr>
+struct _matrixDotProduct;
 
-        template <typename LeftExpr, typename RightExpr, typename ReturnType>
-            struct _matrixDotProduct : public _expression<_matrixDotProduct<LeftExpr, RightExpr, ReturnType>>
-        {
-            using value_type = ReturnType;
+template <template <class, size_t, size_t> typename LeftExpr,
+          template <class, size_t, size_t> typename RightExpr, size_t Rows,
+          size_t Columns, typename LeftType, typename RightType>
+struct _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
+                         RightExpr<RightType, Rows, Columns>>
+    : public _expression<
+          _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
+                            RightExpr<RightType, Rows, Columns>>> {
+  using value_type = decltype(LeftType{} * RightType{});
 
-            const LeftExpr& lhs;
-            const RightExpr& rhs;
+  using left_type = LeftExpr<LeftType, Rows, Columns>;
+  using right_type = RightExpr<RightType, Rows, Columns>;
 
-            _matrixDotProduct(const LeftExpr& left, const RightExpr& right) :
-                lhs(left),
-                rhs(right)
-            {
-            }
+  const left_type &lhs;
+  const right_type &rhs;
 
-            value_type operator[](size_t index) const
-            {
-                return lhs[index] * rhs[index];
-            }
+  _matrixDotProduct(const left_type &left, const right_type &right)
+      : lhs(left), rhs(right) {}
 
-            value_type at(size_t row, size_t column)
-            {
-                size_t idx = LeftExpr::convertToFlatIndex(row, column);
-                return lhs[idx] * rhs[idx];
-            }
+  value_type operator[](size_t index) const { return lhs[index] * rhs[index]; }
 
-        };
+  value_type at(size_t row, size_t column) {
+    size_t idx = left_type::convertToFlatIndex(row, column);
+    return lhs[idx] * rhs[idx];
+  }
+};
 
-        template <typename E1, typename E2>
-            auto operator*(const E1& left, const E2& right)
-            {
-                return _matrixDotProduct<E1, E2, double>(left, right);
-            }
+template <typename E1, typename E2>
+auto operator*(const E1 &left, const E2 &right) {
+  return _matrixDotProduct<E1, E2>(left, right);
+}
 
-    } // end namespace detail
+}  // end namespace detail
 
-} // end namespace mat
+}  // end namespace mat
 
-#endif // Header guard.
+#endif  // Header guard.
