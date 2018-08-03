@@ -55,7 +55,6 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
      * Constructors.
      ******************************************************************************/
 public:
-    using value_type = T;
     Matrix() = default;
 
     // Construct from nested initializer_list.
@@ -110,7 +109,7 @@ public:
     /*******************************************************************************
      * Convenience typedefs.
      ******************************************************************************/
-
+    using value_type = T;
 };  // end template class Matrix
 
 namespace detail
