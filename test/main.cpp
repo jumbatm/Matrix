@@ -11,26 +11,36 @@ using namespace mat;
 namespace // Test helpers.
 {
 
-// For testing, bypassing the use of iterators.
-template <typename T, typename Function, size_t Rows, size_t Columns >
-void mat_for_each(Matrix<T, Rows, Columns>& mat, Function&& f)
-{
-    for (size_t i = 0; i < Rows; ++i)
-    for (size_t j = 0; j < Columns; ++j)
-    {
-        f(mat.at(i, j));
-    }
-}
+    // For testing, bypassing the use of iterators.
+    template <typename T, typename Function, size_t Rows, size_t Columns >
+        void mat_for_each(Matrix<T, Rows, Columns>& mat, Function&& f)
+        {
+            for (size_t i = 0; i < Rows; ++i)
+                for (size_t j = 0; j < Columns; ++j)
+                {
+                    f(mat.at(i, j));
+                }
+        }
 
-template <typename Matrix>
-void initialise_random(Matrix& m)
-{
-    static std::random_device rd;
-    mat_for_each(m, [](auto& elem)
-    {
-        elem = rd();  
-    });
-}
+    template <typename Matrix>
+        void initialise_random(Matrix& m)
+        {
+            std::random_device rd;
+            mat_for_each(m, [&rd](auto& elem)
+                    {
+                    elem = rd();  
+                    });
+        }
+
+    template <typename T, size_t size>
+        void initialise_random(std::array<T, size>& toInitialise)
+        {
+            std::random_device rd;
+            for (auto& elem : toInitialise)
+            {
+                elem = rd();
+            }
+        }
 
 } // end namespace <anonymous>
 
@@ -45,7 +55,7 @@ TEST_CASE("Construct Matrix with values")
     };
 
     int expectedValue = 1;
-    
+
     mat_for_each(m, [&expectedValue](int& param) 
             {
             REQUIRE(param == expectedValue++);
@@ -81,12 +91,40 @@ TEST_CASE("Element-wise multiplication yields the expected results")
     decltype(m) a;
     initialise_random(a);
 
-    auto t = m * a;
-    
+    Matrix<int, 100, 100> t = m * a;
+
     for (size_t i = 0; i < MATRIX_SIZE; ++i)
-    for (size_t j = 0; j < MATRIX_SIZE; ++j)
+        for (size_t j = 0; j < MATRIX_SIZE; ++j)
+        {
+            REQUIRE(t.at(i, j) == m.at(i, j) * a.at(i, j));
+        }
+
+}
+
+TEST_CASE("Matrix supports iterators. Order of traversal is row-major.")
+{
+    constexpr int MATRIX_SIZE = 50;
+
+    std::array<int, MATRIX_SIZE> values;
+    initialise_random(values);
+
+    Matrix<int, MATRIX_SIZE/2, MATRIX_SIZE> m;
+
+    // Put random values into our test matrix.
     {
-        REQUIRE(t.at(i, j) == m.at(i, j) * a.at(i, j));
+        size_t index = 0;
+        mat_for_each(m, [&values, &index](auto& param)
+                {
+                param = values[index++];
+                });
     }
 
+    // Test that these values match.
+    {
+        size_t index = 0;
+        for (auto& elem : m)
+        {
+            REQUIRE(elem == values[index++]);
+        }
+    }
 }
