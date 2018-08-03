@@ -84,6 +84,10 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>> {
     return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
   }
 
+  T &operator[](size_t index) { return m_data[index]; }
+
+  T operator[](size_t index) const { return m_data[index]; }
+
   constexpr int rows() { return Rows; }
 
   constexpr int cols() { return Columns; }
@@ -129,6 +133,8 @@ struct _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
     size_t idx = left_type::convertToFlatIndex(row, column);
     return lhs[idx] * rhs[idx];
   }
+
+  size_t size() const { return Rows * Columns; }
 };
 
 template <typename E1, typename E2>
