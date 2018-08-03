@@ -54,7 +54,7 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
     /*******************************************************************************
      * Constructors.
      ******************************************************************************/
-   public:
+public:
     using value_type = T;
     Matrix() = default;
 
@@ -88,7 +88,7 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
     /*******************************************************************************
      * Public interface
      ******************************************************************************/
-   public:
+public:
     static size_t convertToFlatIndex(size_t rowIndex, size_t columnIndex)
     {
         return rowIndex * Columns + columnIndex;
