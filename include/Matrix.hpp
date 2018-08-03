@@ -29,7 +29,7 @@ struct _expression {
     return static_cast<const E &>(*this)[index];
   }
 
-  size_t size() const { return static_cast<const E &>(*this).size(); }
+  constexpr size_t size() const { return static_cast<const E &>(*this).size(); }
 };
 }  // end namespace detail
 
@@ -134,7 +134,7 @@ struct _matrixDotProduct<LeftExpr<LeftType, Rows, Columns>,
     return lhs[idx] * rhs[idx];
   }
 
-  size_t size() const { return Rows * Columns; }
+  constexpr size_t size() const { return Rows * Columns; }
 };
 
 template <typename E1, typename E2>
