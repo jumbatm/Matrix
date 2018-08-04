@@ -10,7 +10,9 @@ project(matrix VERSION 0.1
 enable_testing()
 
 add_executable(Test
-    main.cpp
+    main_test.cpp
+    construction_test.cpp
+    operators_test.cpp
     )
 
 target_include_directories(Test
