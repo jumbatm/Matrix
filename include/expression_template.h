@@ -1,4 +1,4 @@
-#define JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(NAME_, OPERATOR_)                   \
+#define JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(NAME_, OPERATOR_)                \
     template <typename LeftExpr, typename RightExpr>                        \
     struct NAME_;                                                           \
                                                                             \
@@ -6,8 +6,8 @@
               template <class, size_t, size_t> typename RightExpr,          \
               size_t LeftRows, size_t LeftColumns, size_t RightRows,        \
               size_t RightColumns, typename LeftType, typename RightType>   \
-    struct NAME_<LeftExpr<LeftType, LeftRows, LeftColumns>,         \
-                         RightExpr<RightType, RightRows, RightColumns>>     \
+    struct NAME_<LeftExpr<LeftType, LeftRows, LeftColumns>,                 \
+                 RightExpr<RightType, RightRows, RightColumns>>             \
         : public _expression<                                               \
               NAME_<LeftExpr<LeftType, LeftRows, LeftColumns>,              \
                     RightExpr<RightType, RightRows, RightColumns>>>         \
