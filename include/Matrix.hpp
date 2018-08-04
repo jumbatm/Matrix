@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
+#include "expression_template.h"
 
 /*******************************************************************************
  * Matrix:
@@ -114,52 +115,36 @@ public:
 
 namespace detail
 {
-template <typename LeftExpr, typename RightExpr>
-struct _matrixDotProduct;
+// Generate element-wise operator templates. See expression_template.h
+JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
+JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
+JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
+JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
 
-template <template <class, size_t, size_t> typename LeftExpr,
-          template <class, size_t, size_t> typename RightExpr, size_t LeftRows,
-          size_t LeftColumns, size_t RightRows, size_t RightColumns,
-          typename LeftType, typename RightType>
-struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
-                         RightExpr<RightType, RightRows, RightColumns>>
-    : public _expression<
-          _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
-                            RightExpr<RightType, RightRows, RightColumns>>>
-{
-    static_assert(LeftRows == RightRows && LeftColumns == RightColumns,
-                  "Matrices must be the same size.");
-
-    using value_type = decltype(LeftType{} * RightType{});
-
-    using left_type = LeftExpr<LeftType, LeftRows, LeftColumns>;
-    using right_type = RightExpr<RightType, RightRows, RightColumns>;
-
-    const left_type &lhs;
-    const right_type &rhs;
-
-    _matrixDotProduct(const left_type &left, const right_type &right)
-        : lhs(left), rhs(right)
-    {
-    }
-
-    value_type operator[](size_t index) const
-    {
-        return lhs[index] * rhs[index];
-    }
-    value_type at(size_t row, size_t column)
-    {
-        size_t idx = left_type::convertToFlatIndex(row, column);
-        return lhs[idx] * rhs[idx];
-    }
-
-    constexpr size_t size() const { return LeftRows * LeftColumns; }
-};
-
+/********************************************************************************
+ * Operators - syntactic sugar.
+ *******************************************************************************/
 template <typename E1, typename E2>
 auto operator*(const E1 &left, const E2 &right)
 {
     return _matrixDotProduct<E1, E2>(left, right);
+}
+
+template <typename E1, typename E2>
+auto operator+(const E1 &left, const E2 &right)
+{
+    return _matrixSum<E1, E2>(left, right);
+}
+template <typename E1, typename E2>
+auto operator-(const E1 &left, const E2 &right)
+{
+    return _matrixSubtraction<E1, E2>(left, right);
+}
+
+template <typename E1, typename E2>
+auto operator/(const E1 &left, const E2 &right)
+{
+    return _matrixDotDivision<E1, E2>(left, right);
 }
 
 }  // end namespace detail
