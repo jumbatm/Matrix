@@ -99,8 +99,8 @@ public:
 
     T &operator[](size_t index) { return m_data[index]; }
     T operator[](size_t index) const { return m_data[index]; }
-    constexpr int rows() { return Rows; }
-    constexpr int cols() { return Columns; }
+    constexpr size_t rows() { return Rows; }
+    constexpr size_t cols() { return Columns; }
     /*******************************************************************************
      * Ranged for-loop / iterator support.
      ******************************************************************************/
