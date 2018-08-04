@@ -45,6 +45,8 @@ struct _expression
 template <typename T, size_t Rows, size_t Columns>
 class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
 {
+    static_assert(std::is_arithmetic_v<T>, "Do not use user-defined classes.");
+
     std::array<T, Rows * Columns> m_data{};
 
     using this_type = Matrix<T, Rows, Columns>;
@@ -79,7 +81,7 @@ public:
     template <typename MatrixType>
     Matrix(const detail::_expression<MatrixType> &expr)
     {
-        for (size_t i = 0; i < expr.size(); ++i)
+        for (size_t i = 0; i < size(); ++i)
         {
             m_data[i] = expr[i];
         }
@@ -100,8 +102,9 @@ public:
 
     T &operator[](size_t index) { return m_data[index]; }
     T operator[](size_t index) const { return m_data[index]; }
-    constexpr size_t rows() { return Rows; }
-    constexpr size_t cols() { return Columns; }
+    constexpr size_t rows() const { return Rows; }
+    constexpr size_t cols() const { return Columns; }
+    constexpr size_t size() const { return Rows * Columns; }
     /*******************************************************************************
      * Ranged for-loop / iterator support.
      ******************************************************************************/
@@ -113,38 +116,106 @@ public:
     using value_type = T;
 };  // end template class Matrix
 
+template <typename T>
+struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
+{
+    static_assert(!std::is_reference_v<T>);
+    T value;
+    Matrix(const T &v) : value(v) { }
+    operator T() const { return value; };
+    T at(size_t, size_t) const { return value; }
+    T operator[](size_t) const { return value; }
+};
+
 namespace detail
 {
+/********************************************************************************
+* Expression templates. Must CRTP-subclass expression.
+********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
-JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
+// JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
+//
+template <typename LeftExpr, typename RightExpr>
+struct _matrixDotProduct;
+
+template <template <class, size_t, size_t> typename LeftExpr,
+          template <class, size_t, size_t> typename RightExpr, size_t LeftRows,
+          size_t LeftColumns, size_t RightRows, size_t RightColumns,
+          typename LeftType, typename RightType>
+struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
+                         RightExpr<RightType, RightRows, RightColumns>>
+    : public _expression<
+          _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
+                            RightExpr<RightType, RightRows, RightColumns>>>
+{
+    static_assert((LeftRows == RightRows && LeftColumns == RightColumns) ||
+                      (LeftRows == 1 && LeftColumns == 1) ||
+                      (RightRows == 1 && RightColumns == 1),
+                  "Matrices must be the same size.");
+
+    using value_type = decltype(LeftType{} * RightType{});
+
+    using left_type = LeftExpr<LeftType, LeftRows, LeftColumns>;
+    using right_type = RightExpr<RightType, RightRows, RightColumns>;
+
+    const left_type &lhs;
+    const right_type &rhs;
+
+    _matrixDotProduct(const left_type &left, const right_type &right)
+        : lhs(left), rhs(right)
+    {
+    }
+
+    value_type operator[](size_t index) const
+    {
+        return lhs[index] * rhs[index];
+    }
+    value_type at(size_t row, size_t column)
+    {
+        size_t idx = left_type::convertToFlatIndex(row, column);
+        return lhs[idx] * rhs[idx];
+    }
+
+    constexpr size_t size() const { return LeftRows * LeftColumns; }
+};
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
 
 /********************************************************************************
- * Operators - syntactic sugar.
+ * Operator overloads - syntactic sugar.
  *******************************************************************************/
+
+// Helper to wrap types in the specialisation above if they are an arithmetic
+// type.
+template <typename T>
+using WrapIfIntegral_t =
+    std::conditional_t<std::is_arithmetic_v<T>, Matrix<std::remove_reference_t<T>, 1, 1>, std::remove_reference_t<T>>;
+
 template <typename E1, typename E2>
 auto operator*(const E1 &left, const E2 &right)
 {
-    return _matrixDotProduct<E1, E2>(left, right);
+    return _matrixDotProduct<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left,
+                                                                         right);
 }
 
 template <typename E1, typename E2>
 auto operator+(const E1 &left, const E2 &right)
 {
-    return _matrixSum<E1, E2>(left, right);
+    return _matrixSum<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left, right);
 }
 template <typename E1, typename E2>
 auto operator-(const E1 &left, const E2 &right)
 {
-    return _matrixSubtraction<E1, E2>(left, right);
+    return _matrixSubtraction<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right);
 }
 
 template <typename E1, typename E2>
 auto operator/(const E1 &left, const E2 &right)
 {
-    return _matrixDotDivision<E1, E2>(left, right);
+    return _matrixDotDivision<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right);
 }
 
 }  // end namespace detail
