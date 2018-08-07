@@ -132,40 +132,12 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
 
     Matrix() = delete;
 
-    Matrix(const T v) : value(v)
-    {
-        std::cout << "A Matrix wrapper was created with value = " << value
-                  << " (v = " << v << "). Memory address " << this << "\n";
-        std::cout << "Attempting to use operator[] " << operator[](123) << "\n";
-    }
-    Matrix(const Matrix<T, 1, 1> &m) : value(m.value)
-    {
-        std::cout << "A Matrix wrapper was copied with value = " << value
-                  << " (m.value = " << m.value << this << ")\n";
-    }
-    operator T() const
-    {
-        std::cout << "Requested to cast. Returning " << value << " from "
-                  << this << "\n";
-        return value;
-    };
-    T at(size_t, size_t) const
-    {
-        T retval = value;
-        std::cout << "At called. Returning " << retval << "\n";
-        return value;
-    }
-    inline T operator[](size_t) const
-    {
-        T retval = value;
-        std::cout << "Requested to index. Returning " << retval << " from "
-                  << this << "\n";
-        return static_cast<T>(retval);
-    }
-    ~Matrix()
-    {
-        std::cout << "a wrapped value was destructed. its value was " << value;
-    }
+    Matrix(const T v) : value(v) {}
+    Matrix(const Matrix<T, 1, 1> &m) : value(m.value) {}
+    operator T() const { return value; };
+    T at(size_t, size_t) const { return value; }
+    inline T operator[](size_t) const { return value; }
+    ~Matrix() {}
 };
 
 namespace detail
@@ -177,7 +149,12 @@ namespace detail
 // JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
 //
 template <typename LeftExpr, typename RightExpr>
-struct _matrixDotProduct;
+struct _matrixDotProduct
+{
+    static_assert(
+        (LeftExpr *)0, // To delay until instantiation.
+        "This template should never be instantiated.");
+};
 
 template <template <class, size_t, size_t> typename LeftExpr,
           template <class, size_t, size_t> typename RightExpr, size_t LeftRows,
@@ -199,8 +176,8 @@ struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
     using left_type = LeftExpr<LeftType, LeftRows, LeftColumns>;
     using right_type = RightExpr<RightType, RightRows, RightColumns>;
 
-    const left_type &lhs;
-    const right_type &rhs;
+    const left_type lhs;  // TODO: rvalue ref if passed rvalue ref?
+    const right_type rhs;
 
     _matrixDotProduct(const left_type &left, const right_type &right)
         : lhs(left), rhs(right)
