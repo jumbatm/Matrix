@@ -43,11 +43,11 @@ TEST_CASE("Can multiply by scalar")
 {
     Matrix<int, 3, 3> m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 
-    Matrix <int, 3, 3> a = 3 * m;
+    Matrix<int, 3, 3> a = 3 * m;
 
     int expectedValue = 1;
     for (auto& elem : a)
     {
-        REQUIRE(elem == 3 * expectedValue++);
+        REQUIRE(elem == (3 * expectedValue++));
     }
 }

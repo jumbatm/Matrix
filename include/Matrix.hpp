@@ -5,8 +5,10 @@
 #include <array>
 #include <cstddef>
 #include <initializer_list>
+#include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <vector>  // TODO: Remove.
 #include "expression_template.h"
 
 /*******************************************************************************
@@ -22,8 +24,13 @@ namespace mat
 namespace detail
 {
 template <typename E>
-struct _expression
+class _expression
 {
+private:
+    _expression() = default;
+    friend E;
+
+public:
     auto at(size_t row, size_t column) const
     {
         return static_cast<const E &>(*this).at(row, column);
@@ -120,11 +127,45 @@ template <typename T>
 struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
 {
     static_assert(!std::is_reference_v<T>);
-    T value;
-    Matrix(const T &v) : value(v) { }
-    operator T() const { return value; };
-    T at(size_t, size_t) const { return value; }
-    T operator[](size_t) const { return value; }
+
+    const T value = 0;
+
+    Matrix() = delete;
+
+    Matrix(const T v) : value(v)
+    {
+        std::cout << "A Matrix wrapper was created with value = " << value
+                  << " (v = " << v << "). Memory address " << this << "\n";
+        std::cout << "Attempting to use operator[] " << operator[](123) << "\n";
+    }
+    Matrix(const Matrix<T, 1, 1> &m) : value(m.value)
+    {
+        std::cout << "A Matrix wrapper was copied with value = " << value
+                  << " (m.value = " << m.value << this << ")\n";
+    }
+    operator T() const
+    {
+        std::cout << "Requested to cast. Returning " << value << " from "
+                  << this << "\n";
+        return value;
+    };
+    T at(size_t, size_t) const
+    {
+        T retval = value;
+        std::cout << "At called. Returning " << retval << "\n";
+        return value;
+    }
+    inline T operator[](size_t) const
+    {
+        T retval = value;
+        std::cout << "Requested to index. Returning " << retval << " from "
+                  << this << "\n";
+        return static_cast<T>(retval);
+    }
+    ~Matrix()
+    {
+        std::cout << "a wrapped value was destructed. its value was " << value;
+    }
 };
 
 namespace detail
@@ -190,7 +231,9 @@ JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
 // type.
 template <typename T>
 using WrapIfIntegral_t =
-    std::conditional_t<std::is_arithmetic_v<T>, Matrix<std::remove_reference_t<T>, 1, 1>, std::remove_reference_t<T>>;
+    std::conditional_t<std::is_arithmetic_v<T>,
+                       Matrix<std::remove_reference_t<T>, 1, 1>,
+                       std::remove_reference_t<T>>;
 
 template <typename E1, typename E2>
 auto operator*(const E1 &left, const E2 &right)
