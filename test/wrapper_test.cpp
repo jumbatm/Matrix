@@ -36,9 +36,20 @@ TEST_CASE("Wrapped scalars are copyable")
 
 TEST_CASE("Wrapped scalars are compatible with expression templates.")
 {
-    std::cout << "Test begins...\n";
     Matrix<int, 2, 2> a = {{10, 20}, {30, 40}};
     auto expr = a * 1;
+
+
+    for (size_t i = 0; i < 4; ++i)
+    {
+        REQUIRE(expr[i] == a[i]);
+    }
+}
+
+TEST_CASE("Multiplication can be chained.")
+{
+    Matrix<int, 2, 2> a = {{10, 20}, {30, 40}};
+    auto expr = a * 1 * 2;
 
 
     for (size_t i = 0; i < 4; ++i)
