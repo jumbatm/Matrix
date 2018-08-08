@@ -4,7 +4,7 @@
 
 using namespace mat;
 
-/*TEST_CASE("Matrix<T, 1, 1> can be constructed from value")
+TEST_CASE("Matrix<T, 1, 1> can be constructed from value")
 {
     Matrix<int, 1, 1> m = 3;
     REQUIRE(m.value == 3);
@@ -32,7 +32,7 @@ TEST_CASE("Wrapped scalars are copyable")
     Matrix<int, 1, 1> a = m;
 
     REQUIRE(a.value == m.value);
-}*/
+}
 
 TEST_CASE("Wrapped scalars are compatible with expression templates.")
 {
