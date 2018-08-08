@@ -46,6 +46,16 @@ public:
     {
         return static_cast<const E &>(*this).size();
     }
+
+    constexpr size_t rows() const
+    {
+        return static_cast<const E &>(*this).rows();
+    }
+
+    constexpr size_t cols() const
+    {
+        return static_cast<const E &>(*this).rows();
+    }
 };
 }  // end namespace detail
 
@@ -127,7 +137,7 @@ template <typename T>
 struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
 {
     static_assert(!std::is_reference_v<T>);
-
+    using value_type = T;
     const T value = 0;
 
     Matrix() = delete;
@@ -148,12 +158,40 @@ namespace detail
 // Generate element-wise operator templates. See expression_template.h
 // JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
 //
+#if 0
+template <typename LeftExpr, typename RightExpr>
+struct _matrixDotProduct
+    : public _expression<_matrixDotProduct<LeftExpr, RightExpr>>
+{
+    using value_type = decltype(typename LeftExpr::value_type{} *
+                                typename RightExpr::value_type{});
+
+    const LeftExpr &lhs;
+    const RightExpr &rhs;
+
+    _matrixDotProduct(const LeftExpr &left, const RightExpr &right)
+        : lhs(left), rhs(right)
+    {
+    }
+    value_type operator[](size_t index) const
+    {
+        return lhs[index] * rhs[index];
+    }
+    value_type at(size_t row, size_t column)
+    {
+        size_t idx = Matrix<value_type, lhs.rows(), lhs.cols()>::convertToFlatIndex(row, column);
+        return lhs[idx] * rhs[idx];
+    }
+
+    constexpr size_t size() const { return lhs.rows() * rhs.rows(); }
+
+};
+#else
+
 template <typename LeftExpr, typename RightExpr>
 struct _matrixDotProduct
 {
-    static_assert(
-        (LeftExpr *)0, // To delay until instantiation.
-        "This template should never be instantiated.");
+    static_assert((LeftExpr*)0);
 };
 
 template <template <class, size_t, size_t> typename LeftExpr,
@@ -196,10 +234,11 @@ struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
 
     constexpr size_t size() const { return LeftRows * LeftColumns; }
 };
+
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
-
+#endif
 /********************************************************************************
  * Operator overloads - syntactic sugar.
  *******************************************************************************/
