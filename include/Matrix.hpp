@@ -8,7 +8,6 @@
 #    include <iostream>
 #    include <stdexcept>
 #    include <utility>
-#    include <vector>  // TODO: Remove.
 
 /*******************************************************************************
  * Matrix:
@@ -197,7 +196,6 @@ namespace detail
  * Expression templates. Must CRTP-subclass expression.
  ********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
-// TODO: Find way to use only one struct for all operations.
 
 enum class  _operation
 {
