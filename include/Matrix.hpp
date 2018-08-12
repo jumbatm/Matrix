@@ -1,15 +1,16 @@
 #pragma once
 #ifndef JUMBATM_MATRIX_H_INCLUDED  // Begin Header guard.
-#define JUMBATM_MATRIX_H_INCLUDED
+#    define JUMBATM_MATRIX_H_INCLUDED
 
-#include <array>
-#include <cstddef>
-#include <initializer_list>
-#include <iostream>
-#include <stdexcept>
-#include <utility>
-#include <vector>  // TODO: Remove.
-#include "expression_template.h"
+#    include <array>
+#    include <cstddef>
+#    include <initializer_list>
+#    include <iostream>
+#    include <stdexcept>
+#    include <utility>
+#    include <vector>  // TODO: Remove.
+
+#    include "expression_template.h"
 
 /*******************************************************************************
  * Matrix:
@@ -47,14 +48,14 @@ public:
         return static_cast<const E &>(*this).size();
     }
 
-    constexpr size_t rows() const
+    constexpr static size_t rows()
     {
-        return static_cast<const E &>(*this).rows();
+        return E::rows();
     }
 
-    constexpr size_t cols() const
+    constexpr static size_t cols()
     {
-        return static_cast<const E &>(*this).rows();
+        return E::cols();
     }
 };
 }  // end namespace detail
@@ -93,7 +94,10 @@ public:
     // { {1},
     //   {2},
     //   {3} };
-    Matrix(const std::initializer_list<T> &init) { m_data(init); }
+    Matrix(const std::initializer_list<T> &init)
+    {
+        m_data(init);
+    }
     // Construct from an expression.
     template <typename MatrixType>
     Matrix(const detail::_expression<MatrixType> &expr)
@@ -117,16 +121,37 @@ public:
         return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
     }
 
-    T &operator[](size_t index) { return m_data[index]; }
-    T operator[](size_t index) const { return m_data[index]; }
-    constexpr size_t rows() const { return Rows; }
-    constexpr size_t cols() const { return Columns; }
-    constexpr size_t size() const { return Rows * Columns; }
+    T &operator[](size_t index)
+    {
+        return m_data[index];
+    }
+    T operator[](size_t index) const
+    {
+        return m_data[index];
+    }
+    constexpr static size_t rows()
+    {
+        return Rows;
+    }
+    constexpr static size_t cols()
+    {
+        return Columns;
+    }
+    constexpr size_t size() const
+    {
+        return Rows * Columns;
+    }
     /*******************************************************************************
      * Ranged for-loop / iterator support.
      ******************************************************************************/
-    auto begin() { return m_data.begin(); }
-    auto end() { return m_data.end(); }
+    auto begin()
+    {
+        return m_data.begin();
+    }
+    auto end()
+    {
+        return m_data.end();
+    }
     /*******************************************************************************
      * Convenience typedefs.
      ******************************************************************************/
@@ -138,87 +163,63 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
 {
     static_assert(!std::is_reference_v<T>);
     using value_type = T;
-    const T value = 0;
+    const T value    = 0;
 
     Matrix() = delete;
 
     Matrix(const T v) : value(v) {}
     Matrix(const Matrix<T, 1, 1> &m) : value(m.value) {}
-    operator T() const { return value; };
-    T at(size_t, size_t) const { return value; }
-    inline T operator[](size_t) const { return value; }
+    operator T() const
+    {
+        return value;
+    }
+    T at(size_t, size_t) const
+    {
+        return value;
+    }
+    inline T operator[](size_t) const
+    {
+        return value;
+    }
+
+    constexpr static size_t rows()
+    {
+        return 1;
+    }
+    constexpr static size_t cols()
+    {
+        return 1;
+    }
     ~Matrix() {}
 };
 
 namespace detail
 {
 /********************************************************************************
-* Expression templates. Must CRTP-subclass expression.
-********************************************************************************/
+ * Expression templates. Must CRTP-subclass expression.
+ ********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
 // JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
 //
-#if 0
+
 template <typename LeftExpr, typename RightExpr>
 struct _matrixDotProduct
-    : public _expression<_matrixDotProduct<LeftExpr, RightExpr>>
+  : public _expression<_matrixDotProduct<LeftExpr, RightExpr>>
 {
     using value_type = decltype(typename LeftExpr::value_type{} *
                                 typename RightExpr::value_type{});
 
-    const LeftExpr &lhs;
-    const RightExpr &rhs;
+    const LeftExpr lhs;  // TODO: rvalue ref if passed rvalue ref?
+    const RightExpr rhs;
 
-    _matrixDotProduct(const LeftExpr &left, const RightExpr &right)
-        : lhs(left), rhs(right)
-    {
-    }
-    value_type operator[](size_t index) const
-    {
-        return lhs[index] * rhs[index];
-    }
-    value_type at(size_t row, size_t column)
-    {
-        size_t idx = Matrix<value_type, lhs.rows(), lhs.cols()>::convertToFlatIndex(row, column);
-        return lhs[idx] * rhs[idx];
-    }
-
-    constexpr size_t size() const { return lhs.rows() * rhs.rows(); }
-
-};
-#else
-
-template <typename LeftExpr, typename RightExpr>
-struct _matrixDotProduct
-{
-    static_assert((LeftExpr*)0);
-};
-
-template <template <class, size_t, size_t> typename LeftExpr,
-          template <class, size_t, size_t> typename RightExpr, size_t LeftRows,
-          size_t LeftColumns, size_t RightRows, size_t RightColumns,
-          typename LeftType, typename RightType>
-struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
-                         RightExpr<RightType, RightRows, RightColumns>>
-    : public _expression<
-          _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
-                            RightExpr<RightType, RightRows, RightColumns>>>
-{
-    static_assert((LeftRows == RightRows && LeftColumns == RightColumns) ||
-                      (LeftRows == 1 && LeftColumns == 1) ||
-                      (RightRows == 1 && RightColumns == 1),
+    static_assert((LeftExpr::rows() == RightExpr::rows()
+                   && LeftExpr::cols() == RightExpr::cols())
+                      || (LeftExpr::rows() == 1 && LeftExpr::rows() == 1)
+                      || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
                   "Matrices must be the same size.");
 
-    using value_type = decltype(LeftType{} * RightType{});
-
-    using left_type = LeftExpr<LeftType, LeftRows, LeftColumns>;
-    using right_type = RightExpr<RightType, RightRows, RightColumns>;
-
-    const left_type lhs;  // TODO: rvalue ref if passed rvalue ref?
-    const right_type rhs;
-
-    _matrixDotProduct(const left_type &left, const right_type &right)
-        : lhs(left), rhs(right)
+    _matrixDotProduct(const LeftExpr &left, const RightExpr &right)
+      : lhs(left), rhs(right)
     {
     }
 
@@ -228,17 +229,27 @@ struct _matrixDotProduct<LeftExpr<LeftType, LeftRows, LeftColumns>,
     }
     value_type at(size_t row, size_t column)
     {
-        size_t idx = left_type::convertToFlatIndex(row, column);
+        size_t idx = LeftExpr::convertToFlatIndex(row, column);
         return lhs[idx] * rhs[idx];
     }
 
-    constexpr size_t size() const { return LeftRows * LeftColumns; }
+    constexpr size_t size() const
+    {
+        return rows() * cols();
+    }
+    constexpr static size_t rows()
+    {
+        return LeftExpr::rows();
+    }
+    constexpr static size_t cols()
+    {
+        return RightExpr::cols();
+    }
 };
 
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
-#endif
 /********************************************************************************
  * Operator overloads - syntactic sugar.
  *******************************************************************************/

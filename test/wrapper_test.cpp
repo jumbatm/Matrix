@@ -54,8 +54,6 @@ TEST_CASE("Multiplication can be chained.")
 
     for (size_t i = 0; i < 4; ++i)
     {
-        std::cout << "expr[i] = " << expr[i] << "\n";
-        std::cout << "a[i] = " << a[i] << "\n";
-        REQUIRE(expr[i] == a[i]);
+        REQUIRE(expr[i] == a[i]*2);
     }
 }
