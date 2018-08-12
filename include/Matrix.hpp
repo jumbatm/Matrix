@@ -199,57 +199,12 @@ namespace detail
  * Expression templates. Must CRTP-subclass expression.
  ********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
-// JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
-//
 
-template <typename LeftExpr, typename RightExpr>
-struct _matrixDotProduct
-  : public _expression<_matrixDotProduct<LeftExpr, RightExpr>>
-{
-    using value_type = decltype(typename LeftExpr::value_type{} *
-                                typename RightExpr::value_type{});
-
-    const LeftExpr lhs;  // TODO: rvalue ref if passed rvalue ref?
-    const RightExpr rhs;
-
-    static_assert((LeftExpr::rows() == RightExpr::rows()
-                   && LeftExpr::cols() == RightExpr::cols())
-                      || (LeftExpr::rows() == 1 && LeftExpr::rows() == 1)
-                      || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
-                  "Matrices must be the same size.");
-
-    _matrixDotProduct(const LeftExpr &left, const RightExpr &right)
-      : lhs(left), rhs(right)
-    {
-    }
-
-    value_type operator[](size_t index) const
-    {
-        return lhs[index] * rhs[index];
-    }
-    value_type at(size_t row, size_t column)
-    {
-        size_t idx = LeftExpr::convertToFlatIndex(row, column);
-        return lhs[idx] * rhs[idx];
-    }
-
-    constexpr size_t size() const
-    {
-        return rows() * cols();
-    }
-    constexpr static size_t rows()
-    {
-        return LeftExpr::rows();
-    }
-    constexpr static size_t cols()
-    {
-        return RightExpr::cols();
-    }
-};
-
+JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
+
 /********************************************************************************
  * Operator overloads - syntactic sugar.
  *******************************************************************************/
