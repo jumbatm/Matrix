@@ -199,7 +199,6 @@ namespace detail
 // Generate element-wise operator templates. See expression_template.h
 // TODO: Find way to use only one struct for all operations.
 
-
 enum class  _operation
 {
     PLUS,
@@ -229,8 +228,9 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
     {
     }
 
-    value_type operator[](size_t index) const
+    value_type operator[](size_t index) const noexcept
     {
+        // TODO: Can this be bound statically?
         switch (op)
         {
             case _operation::PLUS:
@@ -240,7 +240,7 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
             case _operation::DOT_PRODUCT:
                 return lhs[index] * rhs[index];
             default:
-                throw std::runtime_error("_matrixExpr: Unknown operator. Expected PLUS, MINUS, DOTPRODUCT...");
+                void(0);
         }
     }
     value_type at(size_t row, size_t column)
