@@ -1,4 +1,5 @@
 #include <array>
+
 #include "Matrix.hpp"
 #include "catch.hpp"
 #include "test_helpers.hpp"

@@ -1,13 +1,13 @@
 #pragma once
 #ifndef JUMBATM_MATRIX_H_INCLUDED  // Begin Header guard.
-#    define JUMBATM_MATRIX_H_INCLUDED
+#define JUMBATM_MATRIX_H_INCLUDED
 
-#    include <array>
-#    include <cstddef>
-#    include <initializer_list>
-#    include <iostream>
-#    include <stdexcept>
-#    include <utility>
+#include <array>
+#include <cstddef>
+#include <initializer_list>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
 
 /*******************************************************************************
  * Matrix:
@@ -197,7 +197,7 @@ namespace detail
  ********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
 
-enum class  _operation
+enum class _operation
 {
     PLUS,
     MINUS,
@@ -221,7 +221,9 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
                       || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
                   "Matrices must be the same size.");
 
-    constexpr _matrixExpr(const LeftExpr& left, const RightExpr& right, const _operation& op_)
+    constexpr _matrixExpr(const LeftExpr &left,
+                          const RightExpr &right,
+                          const _operation &op_)
       : lhs(std::move(left)), rhs(std::move(right)), op(op_)
     {
     }
@@ -276,8 +278,8 @@ using WrapIfIntegral_t =
 template <typename E1, typename E2>
 auto operator*(const E1 &left, const E2 &right)
 {
-    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left,
-                                                                         right, _operation::DOT_PRODUCT);
+    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right, _operation::DOT_PRODUCT);
 }
 
 }  // end namespace detail

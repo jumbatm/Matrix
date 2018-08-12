@@ -1,6 +1,5 @@
-#include "catch.hpp"
-
 #include "Matrix.hpp"
+#include "catch.hpp"
 #include "test_helpers.hpp"
 
 using namespace mat;
@@ -32,10 +31,10 @@ TEST_CASE("Matrices are zero-initialised, no matter the size")
 
 TEST_CASE("Matrices are deep-copyable")
 {
-    Matrix<int, 3, 3> m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    Matrix<int, 3, 3> m = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
 
     Matrix<int, 3, 3> a = m;
     size_t i, j;
-    mat_for_each(m, [&a, &i, &j](int &param) { REQUIRE(a.at(i, j) == param); },
-                 i, j);
+    mat_for_each(
+        m, [&a, &i, &j](int &param) { REQUIRE(a.at(i, j) == param); }, i, j);
 }
