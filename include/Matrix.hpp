@@ -223,7 +223,7 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
                       || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
                   "Matrices must be the same size.");
 
-    _matrixExpr(const LeftExpr& left, const RightExpr& right, const _operation& op_)
+    constexpr _matrixExpr(const LeftExpr& left, const RightExpr& right, const _operation& op_)
       : lhs(std::move(left)), rhs(std::move(right)), op(op_)
     {
     }
