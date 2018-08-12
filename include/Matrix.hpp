@@ -199,6 +199,7 @@ namespace detail
  * Expression templates. Must CRTP-subclass expression.
  ********************************************************************************/
 // Generate element-wise operator templates. See expression_template.h
+// TODO: Find way to use only one struct for all operations.
 
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
 JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);

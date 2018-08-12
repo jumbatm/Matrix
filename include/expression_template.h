@@ -19,7 +19,7 @@ using make_collapsible_t = T&;
                       "Matrices must be the same size.");                     \
                                                                               \
         NAME_(const LeftExpr& left, const RightExpr& right)                   \
-          : lhs(left), rhs(right)                                             \
+          : lhs(std::move(left)), rhs(std::move(right))                       \
         {                                                                     \
         }                                                                     \
                                                                               \
