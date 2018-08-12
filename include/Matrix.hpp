@@ -10,8 +10,6 @@
 #    include <utility>
 #    include <vector>  // TODO: Remove.
 
-#    include "expression_template.h"
-
 /*******************************************************************************
  * Matrix:
  *
@@ -201,10 +199,69 @@ namespace detail
 // Generate element-wise operator templates. See expression_template.h
 // TODO: Find way to use only one struct for all operations.
 
-JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotProduct, *);
-JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSum, +);
-JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixDotDivision, /);
-JUMBATM_MAT_OPERATOR_EXPR_TEMPLATE(_matrixSubtraction, -);
+
+enum class  _operation
+{
+    PLUS,
+    MINUS,
+    DOT_PRODUCT
+};
+
+template <typename LeftExpr, typename RightExpr>
+struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
+{
+    using value_type = decltype(typename LeftExpr::value_type{} *
+                                typename RightExpr::value_type{});
+
+    const LeftExpr lhs;
+    const RightExpr rhs;
+
+    const _operation op;
+
+    static_assert((LeftExpr::rows() == RightExpr::rows()
+                   && LeftExpr::cols() == RightExpr::cols())
+                      || (LeftExpr::rows() == 1 && LeftExpr::rows() == 1)
+                      || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
+                  "Matrices must be the same size.");
+
+    _matrixExpr(const LeftExpr& left, const RightExpr& right, const _operation& op_)
+      : lhs(std::move(left)), rhs(std::move(right)), op(op_)
+    {
+    }
+
+    value_type operator[](size_t index) const
+    {
+        switch (op)
+        {
+            case _operation::PLUS:
+                return lhs[index] + rhs[index];
+            case _operation::MINUS:
+                return lhs[index] - rhs[index];
+            case _operation::DOT_PRODUCT:
+                return lhs[index] * rhs[index];
+            default:
+                throw std::runtime_error("_matrixExpr: Unknown operator. Expected PLUS, MINUS, DOTPRODUCT...");
+        }
+    }
+    value_type at(size_t row, size_t column)
+    {
+        size_t idx = LeftExpr::convertToFlatIndex(row, column);
+        return operator[](idx);
+    }
+
+    constexpr size_t size() const
+    {
+        return rows() * cols();
+    }
+    constexpr static size_t rows()
+    {
+        return LeftExpr::rows();
+    }
+    constexpr static size_t cols()
+    {
+        return RightExpr::cols();
+    }
+};
 
 /********************************************************************************
  * Operator overloads - syntactic sugar.
@@ -221,27 +278,8 @@ using WrapIfIntegral_t =
 template <typename E1, typename E2>
 auto operator*(const E1 &left, const E2 &right)
 {
-    return _matrixDotProduct<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left,
-                                                                         right);
-}
-
-template <typename E1, typename E2>
-auto operator+(const E1 &left, const E2 &right)
-{
-    return _matrixSum<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left, right);
-}
-template <typename E1, typename E2>
-auto operator-(const E1 &left, const E2 &right)
-{
-    return _matrixSubtraction<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-        left, right);
-}
-
-template <typename E1, typename E2>
-auto operator/(const E1 &left, const E2 &right)
-{
-    return _matrixDotDivision<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-        left, right);
+    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(left,
+                                                                         right, _operation::DOT_PRODUCT);
 }
 
 }  // end namespace detail
