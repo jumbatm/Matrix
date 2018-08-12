@@ -32,7 +32,7 @@ TEST_CASE("Multiplication expression template can do .at()")
 
     int val = 0;
 
-    for (auto &elem : m)
+    for (auto& elem : m)
 
     {
         elem = ++val;
@@ -41,7 +41,7 @@ TEST_CASE("Multiplication expression template can do .at()")
 
 TEST_CASE("Can multiply by scalar")
 {
-    Matrix<int, 3, 3> m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    Matrix<int, 3, 3> m = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
 
     Matrix<int, 3, 3> a = 3 * m;
 
