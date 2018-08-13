@@ -158,7 +158,7 @@ public:
 template <typename T>
 struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
 {
-    static_assert(!std::is_reference_v<T>);
+    static_assert(!std::is_reference_v<T> && std::is_arithmetic_v<T>);
     using value_type = T;
     const T value    = 0;
 
