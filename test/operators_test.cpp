@@ -4,6 +4,16 @@
 
 using namespace mat;
 
+namespace
+{
+constexpr Matrix<int, 3, 3> testMatrix =
+    // clang-format off
+{{ 1, 2, 3 }, 
+ { 4, 5, 6 }, 
+ { 7, 8, 9 }};
+// clang-format on
+}  // namespace
+// Dot product.
 TEST_CASE("Element-wise multiplication yields the expected results")
 {
     constexpr int MATRIX_SIZE = 100;
@@ -24,26 +34,23 @@ TEST_CASE("Element-wise multiplication yields the expected results")
         }
 }
 
-TEST_CASE("Multiplication expression template can do .at()")
+TEST_CASE("Multiplication expression template can do .at()") 
 {
     constexpr int MATRIX_SIZE = 3;
 
-    Matrix<int, MATRIX_SIZE, MATRIX_SIZE> m;
+    auto exprTemplate = testMatrix * 1;
+    int expectedValue = 1;
 
-    int val = 0;
-
-    for (auto& elem : m)
-
-    {
-        elem = ++val;
-    }
+    for (size_t i = 0; i < MATRIX_SIZE; ++i)
+        for (size_t j = 0; j < MATRIX_SIZE; ++j)
+        {
+            REQUIRE(exprTemplate.at(i, j) == expectedValue++);
+        }
 }
 
-TEST_CASE("Can multiply by scalar")
+TEST_CASE("Multiplication by scalar performs multiplication to each element.")
 {
-    Matrix<int, 3, 3> m = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
-
-    Matrix<int, 3, 3> a = 3 * m;
+    Matrix<int, 3, 3> a = 3 * testMatrix;
 
     int expectedValue = 1;
     for (auto& elem : a)
