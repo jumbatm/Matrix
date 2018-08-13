@@ -29,13 +29,13 @@ private:
     friend E;
 
 public:
-    auto at(size_t row, size_t column) const
+    auto at(const size_t row, const size_t column) const
     {
         return static_cast<const E &>(*this).at(row, column);
     }
 
     template <typename E_ = E>
-    typename E_::value_type operator[](size_t index) const
+    typename E_::value_type operator[](const size_t index) const
     {
         return static_cast<const E &>(*this)[index];
     }
@@ -76,7 +76,7 @@ public:
     Matrix() = default;
 
     // Construct from nested initializer_list.
-    Matrix(const std::initializer_list<std::initializer_list<T>> &init)
+    constexpr Matrix(const std::initializer_list<std::initializer_list<T>> &init)
     {
         size_t index = 0;
         for (auto &row : init)
@@ -91,13 +91,13 @@ public:
     // { {1},
     //   {2},
     //   {3} };
-    Matrix(const std::initializer_list<T> &init)
+    constexpr Matrix(const std::initializer_list<T> &init)
     {
         m_data(init);
     }
     // Construct from an expression.
     template <typename MatrixType>
-    Matrix(const detail::_expression<MatrixType> &expr)
+    constexpr Matrix(const detail::_expression<MatrixType> &expr)
     {
         for (size_t i = 0; i < size(); ++i)
         {
@@ -109,7 +109,7 @@ public:
      * Public interface
      ******************************************************************************/
 public:
-    static size_t convertToFlatIndex(size_t rowIndex, size_t columnIndex)
+    constexpr inline static size_t convertToFlatIndex(const size_t rowIndex, const size_t columnIndex)
     {
         return rowIndex * Columns + columnIndex;
     }
@@ -118,11 +118,11 @@ public:
         return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
     }
 
-    T &operator[](size_t index)
+    T &operator[](const size_t index)
     {
         return m_data[index];
     }
-    T operator[](size_t index) const
+    T operator[](const size_t index) const
     {
         return m_data[index];
     }
@@ -170,11 +170,11 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
     {
         return value;
     }
-    T at(size_t, size_t) const
+    T at(const size_t, const size_t) const
     {
         return value;
     }
-    inline T operator[](size_t) const
+    inline T operator[](const size_t) const
     {
         return value;
     }
@@ -201,7 +201,8 @@ enum class _operation
 {
     PLUS,
     MINUS,
-    DOT_PRODUCT
+    DOT_PRODUCT,
+    DOT_DIVIDE
 };
 
 template <typename LeftExpr, typename RightExpr>
@@ -228,9 +229,9 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
     {
     }
 
-    value_type operator[](size_t index) const noexcept
+    value_type operator[](const size_t index) const noexcept
     {
-        // TODO: Can this be bound statically?
+        // TODO: Can this be dispatched statically?
         switch (op)
         {
             case _operation::PLUS:
@@ -240,10 +241,10 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
             case _operation::DOT_PRODUCT:
                 return lhs[index] * rhs[index];
             default:
-                void(0);
+                throw std::runtime_error("Unknown operation specified.");
         }
     }
-    value_type at(size_t row, size_t column)
+    value_type at(const size_t row, const size_t column)
     {
         size_t idx = LeftExpr::convertToFlatIndex(row, column);
         return operator[](idx);
@@ -276,10 +277,29 @@ using WrapIfIntegral_t =
                        std::remove_reference_t<T>>;
 
 template <typename E1, typename E2>
-auto operator*(const E1 &left, const E2 &right)
+constexpr auto operator*(const E1 &left, const E2 &right)
 {
     return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
         left, right, _operation::DOT_PRODUCT);
+}
+
+template <typename E1, typename E2>
+constexpr auto operator+(const E1 &left, const E2 &right)
+{
+    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right, _operation::PLUS);
+}
+template <typename E1, typename E2>
+constexpr auto operator-(const E1 &left, const E2 &right)
+{
+    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right, _operation::MINUS);
+}
+template <typename E1, typename E2>
+constexpr auto operator/(const E1 &left, const E2 &right)
+{
+    return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+        left, right, _operation::DOT_DIVIDE);
 }
 
 }  // end namespace detail
