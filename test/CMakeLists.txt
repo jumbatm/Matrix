@@ -15,6 +15,7 @@ add_executable(Test
     main_test.cpp
     operators_test.cpp
     wrapper_test.cpp
+    indexing_test.cpp
     )
 
 target_include_directories(Test
