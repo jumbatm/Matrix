@@ -195,14 +195,15 @@ namespace detail
 /********************************************************************************
  * Expression templates. Must CRTP-subclass expression.
  ********************************************************************************/
-// Generate element-wise operator templates. See expression_template.h
 
 enum class _operation
 {
     PLUS,
     MINUS,
     DOT_PRODUCT,
-    DOT_DIVIDE
+    DOT_DIVIDE,
+    MULTIPLICATION,
+    CROSS_PRODUCT
 };
 
 template <typename LeftExpr, typename RightExpr>
@@ -240,6 +241,8 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
                 return lhs[index] - rhs[index];
             case _operation::DOT_PRODUCT:
                 return lhs[index] * rhs[index];
+            case _operation::CROSS_PRODUCT:
+                return 0; /* Not yet implemented. */
             default:
                 throw std::runtime_error("Unknown operation specified.");
         }
