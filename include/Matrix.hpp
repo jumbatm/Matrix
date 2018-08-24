@@ -33,13 +33,6 @@ public:
   {
     return static_cast<const E &>(*this).at(row, column);
   }
-/*
-  template <typename E_ = E>
-  typename E_::value_type operator[](const size_t index) const
-  {
-    return static_cast<const E &>(*this)[index];
-  }
-  */
 
   constexpr size_t size() const
   {
@@ -92,21 +85,17 @@ public:
   // { {1},
   //   {2},
   //   {3} };
-  constexpr Matrix(const std::initializer_list<T> &init)
-  {
-    m_data(init);
-  }
+  constexpr Matrix(const std::initializer_list<T> &init) : m_data(init) {}
   // Construct from an expression.
   template <typename MatrixType>
   constexpr Matrix(const detail::_expression<MatrixType> &expr)
   {
-    for (size_t i = 0; i < rows(); ++i)
-      for (size_t j = 0; j < cols(); ++j)
+    for (size_t i = 1; i <= rows(); ++i)
+      for (size_t j = 1; j <= cols(); ++j)
       {
-      m_data[convertToFlatIndex(i, j)] = expr.at(i, j);
+        m_data[convertToFlatIndex(i, j)] = expr.at(i, j);
       }
   }
-
 
   /*******************************************************************************
    * Public interface
@@ -115,7 +104,7 @@ public:
   constexpr inline static size_t convertToFlatIndex(const size_t rowIndex,
                                                     const size_t columnIndex)
   {
-    return rowIndex * Columns + columnIndex;
+    return (rowIndex - 1) * Columns + (columnIndex - 1);
   }
   T &at(const size_t rowIndex, const size_t columnIndex)
   {
@@ -172,11 +161,8 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
   {
     return value;
   }
+
   T at(const size_t, const size_t) const
-  {
-    return value;
-  }
-  inline T operator[](const size_t) const
   {
     return value;
   }

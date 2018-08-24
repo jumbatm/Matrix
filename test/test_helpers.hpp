@@ -17,8 +17,8 @@ void mat_for_each(mat::Matrix<T, Rows, Columns> &mat,
                   size_t &i = _empty_i,
                   size_t &j = _empty_j)
 {
-  for (i = 0; i < Rows; ++i)
-    for (j = 0; j < Columns; ++j)
+  for (i = 1; i <= Rows; ++i)
+    for (j = 1; j <= Columns; ++j)
     {
       f(mat.at(i, j));
     }
