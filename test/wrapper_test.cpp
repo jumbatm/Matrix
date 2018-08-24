@@ -22,7 +22,6 @@ TEST_CASE(
 
   for (size_t i = 0; i < 100; ++i)
   {
-    REQUIRE(t[rd()] == expectedValue);
     REQUIRE(t.at(rd(), rd()) == expectedValue);
   }
 }
@@ -40,9 +39,10 @@ TEST_CASE("Wrapped scalars are compatible with expression templates.")
   Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
   auto expr           = a * 1;
 
-  for (size_t i = 0; i < 4; ++i)
+  for (size_t i = 0; i < 2; ++i)
+    for(size_t j = 0; j < 2; ++j)
   {
-    REQUIRE(expr[i] == a[i]);
+    REQUIRE(expr.at(i, j) == a.at(i, j));
   }
 }
 
@@ -51,8 +51,9 @@ TEST_CASE("Multiplication can be chained.")
   Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
   auto expr           = a * 1 * 2;
 
-  for (size_t i = 0; i < 4; ++i)
+  for (size_t i = 0; i < 2; ++i)
+    for (size_t j = 0; j < 2; ++j)
   {
-    REQUIRE(expr[i] == a[i] * 2);
+    REQUIRE(expr.at(i, j) == a.at(i, j) * 2);
   }
 }

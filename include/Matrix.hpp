@@ -33,12 +33,13 @@ public:
   {
     return static_cast<const E &>(*this).at(row, column);
   }
-
+/*
   template <typename E_ = E>
   typename E_::value_type operator[](const size_t index) const
   {
     return static_cast<const E &>(*this)[index];
   }
+  */
 
   constexpr size_t size() const
   {
@@ -99,11 +100,13 @@ public:
   template <typename MatrixType>
   constexpr Matrix(const detail::_expression<MatrixType> &expr)
   {
-    for (size_t i = 0; i < size(); ++i)
-    {
-      m_data[i] = expr[i];
-    }
+    for (size_t i = 0; i < rows(); ++i)
+      for (size_t j = 0; j < cols(); ++j)
+      {
+      m_data[convertToFlatIndex(i, j)] = expr.at(i, j);
+      }
   }
+
 
   /*******************************************************************************
    * Public interface
@@ -119,14 +122,11 @@ public:
     return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
   }
 
-  T &operator[](const size_t index)
+  T at(const size_t rowIndex, const size_t columnIndex) const
   {
-    return m_data[index];
+    return m_data.at(convertToFlatIndex(rowIndex, columnIndex));
   }
-  T operator[](const size_t index) const
-  {
-    return m_data[index];
-  }
+
   constexpr static size_t rows()
   {
     return Rows;
@@ -154,6 +154,7 @@ public:
    * Convenience typedefs.
    ******************************************************************************/
   using value_type = T;
+
 };  // end template class Matrix
 
 template <typename T>
@@ -231,27 +232,22 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
   {
   }
 
-  value_type operator[](const size_t index) const noexcept
+  value_type at(const size_t row, const size_t column) const
   {
     // TODO: Can this be dispatched statically?
     switch (op)
     {
       case _operation::PLUS:
-        return lhs[index] + rhs[index];
+        return lhs.at(row, column) + rhs.at(row, column);
       case _operation::MINUS:
-        return lhs[index] - rhs[index];
+        return lhs.at(row, column) - rhs.at(row, column);
       case _operation::DOT_PRODUCT:
-        return lhs[index] * rhs[index];
+        return lhs.at(row, column) * rhs.at(row, column);
       case _operation::CROSS_PRODUCT:
         return 0; /* Not yet implemented. */
       default:
         throw std::runtime_error("Unknown operation specified.");
     }
-  }
-  value_type at(const size_t row, const size_t column)
-  {
-    size_t idx = LeftExpr::convertToFlatIndex(row, column);
-    return operator[](idx);
   }
 
   constexpr size_t size() const
