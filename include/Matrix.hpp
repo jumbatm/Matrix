@@ -34,11 +34,6 @@ public:
     return static_cast<const E &>(*this).at(row, column);
   }
 
-  constexpr size_t size() const
-  {
-    return static_cast<const E &>(*this).size();
-  }
-
   constexpr static size_t rows()
   {
     return E::rows();
@@ -123,10 +118,6 @@ public:
   constexpr static size_t cols()
   {
     return Columns;
-  }
-  constexpr size_t size() const
-  {
-    return Rows * Columns;
   }
   /*******************************************************************************
    * Ranged for-loop / iterator support.
@@ -236,10 +227,6 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
     }
   }
 
-  constexpr size_t size() const
-  {
-    return rows() * cols();
-  }
   constexpr static size_t rows()
   {
     return LeftExpr::rows();
