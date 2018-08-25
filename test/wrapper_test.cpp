@@ -40,10 +40,10 @@ TEST_CASE("Wrapped scalars are compatible with expression templates.")
   auto expr           = a * 1;
 
   for (size_t i = 1; i <= 2; ++i)
-    for(size_t j = 1; j <= 2; ++j)
-  {
-    REQUIRE(expr.at(i, j) == a.at(i, j));
-  }
+    for (size_t j = 1; j <= 2; ++j)
+    {
+      REQUIRE(expr.at(i, j) == a.at(i, j));
+    }
 }
 
 TEST_CASE("Multiplication can be chained.")
@@ -53,7 +53,7 @@ TEST_CASE("Multiplication can be chained.")
 
   for (size_t i = 1; i <= 2; ++i)
     for (size_t j = 1; j <= 2; ++j)
-  {
-    REQUIRE(expr.at(i, j) == a.at(i, j) * 2);
-  }
+    {
+      REQUIRE(expr.at(i, j) == a.at(i, j) * 2);
+    }
 }
