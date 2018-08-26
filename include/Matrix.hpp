@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <utility>
 
+#define EXCEPT_ASSERT(x) (void)(!(x) ? throw std::runtime_error(#x) : 0)
+
 /*******************************************************************************
  * Matrix:
  *
@@ -99,6 +101,8 @@ public:
   constexpr inline static size_t convertToFlatIndex(const size_t rowIndex,
                                                     const size_t columnIndex)
   {
+    EXCEPT_ASSERT((0 < rowIndex && rowIndex <= Rows)
+                  && (0 < columnIndex && columnIndex <= Columns));
     return (rowIndex - 1) * Columns + (columnIndex - 1);
   }
   T &at(const size_t rowIndex, const size_t columnIndex)
@@ -186,7 +190,7 @@ enum class _operation
 };
 
 template <typename LeftExpr, typename RightExpr>
-struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
+struct _matrixElementExpr : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
 {
   using value_type = decltype(typename LeftExpr::value_type{} *
                               typename RightExpr::value_type{});
@@ -202,7 +206,7 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
                     || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
                 "Matrices must be the same size.");
 
-  constexpr _matrixExpr(const LeftExpr &left,
+  constexpr _matrixElementExpr(const LeftExpr &left,
                         const RightExpr &right,
                         const _operation &op_)
     : lhs(std::move(left)), rhs(std::move(right)), op(op_)
@@ -220,8 +224,8 @@ struct _matrixExpr : public _expression<_matrixExpr<LeftExpr, RightExpr>>
         return lhs.at(row, column) - rhs.at(row, column);
       case _operation::DOT_PRODUCT:
         return lhs.at(row, column) * rhs.at(row, column);
-      case _operation::CROSS_PRODUCT:
-        return 0; /* Not yet implemented. */
+      case _operation::DOT_DIVIDE:
+        return lhs.at(row, column) / rhs.at(row, column);
       default:
         throw std::runtime_error("Unknown operation specified.");
     }
@@ -252,26 +256,26 @@ using WrapIfIntegral_t =
 template <typename E1, typename E2>
 constexpr auto operator*(const E1 &left, const E2 &right)
 {
-  return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
       left, right, _operation::DOT_PRODUCT);
 }
 
 template <typename E1, typename E2>
 constexpr auto operator+(const E1 &left, const E2 &right)
 {
-  return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
       left, right, _operation::PLUS);
 }
 template <typename E1, typename E2>
 constexpr auto operator-(const E1 &left, const E2 &right)
 {
-  return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
       left, right, _operation::MINUS);
 }
 template <typename E1, typename E2>
 constexpr auto operator/(const E1 &left, const E2 &right)
 {
-  return _matrixExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
+  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
       left, right, _operation::DOT_DIVIDE);
 }
 
