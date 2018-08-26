@@ -9,7 +9,8 @@
 #include <stdexcept>
 #include <utility>
 
-#define EXCEPT_ASSERT(x) (void)(!(x) ? throw std::runtime_error("mat: Assertion failed: " #x) : 0)
+#define EXCEPT_ASSERT(x) \
+  (void)(!(x) ? throw std::runtime_error("mat: Assertion failed: " #x) : 0)
 
 /*******************************************************************************
  * Matrix:
