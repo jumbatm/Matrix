@@ -190,7 +190,8 @@ enum class _operation
 };
 
 template <typename LeftExpr, typename RightExpr>
-struct _matrixElementExpr : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
+struct _matrixElementExpr
+  : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
 {
   using value_type = decltype(typename LeftExpr::value_type{} *
                               typename RightExpr::value_type{});
@@ -207,8 +208,8 @@ struct _matrixElementExpr : public _expression<_matrixElementExpr<LeftExpr, Righ
                 "Matrices must be the same size.");
 
   constexpr _matrixElementExpr(const LeftExpr &left,
-                        const RightExpr &right,
-                        const _operation &op_)
+                               const RightExpr &right,
+                               const _operation &op_)
     : lhs(std::move(left)), rhs(std::move(right)), op(op_)
   {
   }
