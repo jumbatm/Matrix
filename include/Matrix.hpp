@@ -68,8 +68,8 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
    ******************************************************************************/
 public:
   Matrix() = default;
-//  Matrix(Matrix&&) = default;
-  //Matrix(const Matrix&) = default;
+  Matrix(Matrix&&) = default;
+  Matrix(const Matrix&) = default;
 
   // Construct from nested initializer_list.
   constexpr Matrix(const std::initializer_list<std::initializer_list<T>> &init)
