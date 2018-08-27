@@ -4,7 +4,7 @@
 
 using namespace mat;
 
-/*TEST_CASE("Construct Matrix with values")
+TEST_CASE("Construct Matrix with values")
 {
     Matrix<int, 3, 3> m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 
@@ -12,7 +12,7 @@ using namespace mat;
 
     mat_for_each(
         m, [&expectedValue](int &param) { REQUIRE(param == expectedValue++); });
-}*/
+}
 
 TEST_CASE("Matrices are zero-initialised, no matter the size")
 {
