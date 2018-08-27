@@ -6,32 +6,33 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(matrix VERSION 0.1
-    LANGUAGES CXX)
+  LANGUAGES CXX)
 
 enable_testing()
 
 add_executable(Test
-    construction_test.cpp
-    iterators_test.cpp
-    main_test.cpp
-    operators_test.cpp
-    wrapper_test.cpp
-    indexing_test.cpp
-    ../src/Matrix.cpp
-    )
+  construction_test.cpp
+  iterators_test.cpp
+  main_test.cpp
+  operators_test.cpp
+  wrapper_test.cpp
+  indexing_test.cpp
+  ../src/Matrix.cpp
+  transpose_test.cpp
+  )
 
 target_include_directories(Test
-    PRIVATE
-    ./catch-tiny/include/
-    ../include/
-    )
+  PRIVATE
+  ./catch-tiny/include/
+  ../include/
+  )
 
 target_compile_options(Test
-    PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    )
+  PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+  )
 
 add_test(NAME "Matrix tests"
-    COMMAND Test)
+  COMMAND Test)

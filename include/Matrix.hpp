@@ -29,6 +29,8 @@ class _expression
 {
 private:
   _expression() = default;
+  /*_expression(const _expression&) = default;
+  _expression(_expression&&) = default;*/
   friend E;
 
 public:
@@ -54,7 +56,7 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
 {
   static_assert(std::is_arithmetic_v<T>, "Do not use user-defined classes.");
 
-  std::array<T, Rows * Columns> m_data{};
+  std::array<T, Rows * Columns> m_data = {};
 
   using this_type = Matrix<T, Rows, Columns>;
   using data_type = decltype(m_data);
@@ -66,6 +68,8 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
    ******************************************************************************/
 public:
   Matrix() = default;
+//  Matrix(Matrix&&) = default;
+  //Matrix(const Matrix&) = default;
 
   // Construct from nested initializer_list.
   constexpr Matrix(const std::initializer_list<std::initializer_list<T>> &init)
@@ -85,6 +89,7 @@ public:
   //   {3} };
   constexpr Matrix(const std::initializer_list<T> &init) : m_data(init) {}
   // Construct from an expression.
+  
   template <typename MatrixType>
   constexpr Matrix(const detail::_expression<MatrixType> &expr)
   {
@@ -211,7 +216,8 @@ struct _matrixElementExpr
   constexpr _matrixElementExpr(const LeftExpr &left,
                                const RightExpr &right,
                                const _operation &op_)
-    : lhs(std::move(left)), rhs(std::move(right)), op(op_)
+    : lhs(std::move(left)), rhs(std::move(right)),
+      op(op_)  // May need to watch out with moving the values.
   {
   }
 
@@ -240,6 +246,39 @@ struct _matrixElementExpr
   constexpr static size_t cols()
   {
     return RightExpr::cols();
+  }
+};
+
+template <typename MatrixLike>
+struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
+{
+  MatrixLike &m_matrix;
+
+public:
+  template <typename MatrixLikeDeduced>
+  _matrixTranspose(MatrixLikeDeduced &&matrix)
+    : m_matrix(std::forward<MatrixLike>(matrix))
+  {
+  }
+
+  auto &at(size_t i, size_t j)
+  {
+    return m_matrix.at(i, j);
+  }
+
+  auto at(size_t i, size_t j) const
+  {
+    return m_matrix.at(i, j);
+  }
+
+  static size_t rows()
+  {
+    return MatrixLike::cols();
+  }
+
+  static size_t cols()
+  {
+    return MatrixLike::rows();
   }
 };
 

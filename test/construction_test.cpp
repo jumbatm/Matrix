@@ -38,3 +38,10 @@ TEST_CASE("Matrices are deep-copyable")
   mat_for_each(
       m, [&a, &i, &j](int &param) { REQUIRE(a.at(i, j) == param); }, i, j);
 }
+
+TEST_CASE("Matrices can take advantage of move semantics.")
+{
+  Matrix<int, 3, 3> m = {{ 1, 2}, {3, 4}};
+  Matrix<int, 3, 3> a = std::move(m);
+  (void)a;
+}
