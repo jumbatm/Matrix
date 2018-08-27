@@ -252,7 +252,7 @@ struct _matrixElementExpr
 template <typename MatrixLike>
 struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
 {
-  MatrixLike &m_matrix;
+  MatrixLike m_matrix;
 
 public:
   template <typename MatrixLikeDeduced>
@@ -263,12 +263,12 @@ public:
 
   auto &at(size_t i, size_t j)
   {
-    return m_matrix.at(i, j);
+    return m_matrix.at(j, i);
   }
 
   auto at(size_t i, size_t j) const
   {
-    return m_matrix.at(i, j);
+    return m_matrix.at(j, i);
   }
 
   static size_t rows()
