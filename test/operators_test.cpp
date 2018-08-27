@@ -86,3 +86,16 @@ TEST_CASE("Subtraction between two matrices performs elementwise subtraction.")
       i,
       j);
 }
+
+TEST_CASE(
+    "The creation of an expression template leaves original Matrix in a valid "
+    "state")
+{
+  Matrix<int, 2, 2> mat   = { { 1, 2 }, { 3, 4 } };
+  Matrix<int, 2, 2> other = { { 1, 2 }, { 3, 4 } };
+  auto expr               = mat + other;
+  (void)expr;  // To hush unused value warning.
+  int value = 1;
+  mat_for_each(mat, [value](int val) mutable { REQUIRE(val == value++); });
+  mat_for_each(mat, [&value](int val) mutable { REQUIRE(val == value++); });
+}
