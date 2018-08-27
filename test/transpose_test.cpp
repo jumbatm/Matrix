@@ -15,3 +15,15 @@ TEST_CASE("Transpose expression template can take both lvalues and rvalues")
       REQUIRE(testTranspose.at(i, j) == test.at(j, i));
     }
 }
+
+TEST_CASE("Transpose on matrices yields expected result.")
+{
+  Matrix<int, 2, 2> test = { { 1, 2 }, { 3, 4 } };
+  Matrix<int, 2, 2> ans  = mat::transpose(test);
+  int expectedValues[]   = { 1, 3, 2, 4 };
+  size_t i               = 0;
+  for (auto &elem : ans)
+  {
+    REQUIRE(elem == expectedValues[i++]);
+  }
+}
