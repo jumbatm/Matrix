@@ -56,7 +56,7 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
 {
   static_assert(std::is_arithmetic_v<T>, "Do not use user-defined classes.");
 
-  std::array<T, Rows * Columns> m_data = {};
+  std::array<T, Rows *Columns> m_data = {};
 
   using this_type = Matrix<T, Rows, Columns>;
   using data_type = decltype(m_data);
@@ -67,9 +67,9 @@ class Matrix : public detail::_expression<Matrix<T, Rows, Columns>>
    * Constructors.
    ******************************************************************************/
 public:
-  Matrix() = default;
-  Matrix(Matrix&&) = default;
-  Matrix(const Matrix&) = default;
+  Matrix()               = default;
+  Matrix(Matrix &&)      = default;
+  Matrix(const Matrix &) = default;
 
   // Construct from nested initializer_list.
   constexpr Matrix(const std::initializer_list<std::initializer_list<T>> &init)
@@ -89,7 +89,7 @@ public:
   //   {3} };
   constexpr Matrix(const std::initializer_list<T> &init) : m_data(init) {}
   // Construct from an expression.
-  
+
   template <typename MatrixType>
   constexpr Matrix(const detail::_expression<MatrixType> &expr)
   {
@@ -255,10 +255,7 @@ struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
   const MatrixLike m_matrix;
 
 public:
-  _matrixTranspose(const MatrixLike &matrix)
-    : m_matrix(std::move(matrix))
-  {
-  }
+  _matrixTranspose(const MatrixLike &matrix) : m_matrix(std::move(matrix)) {}
 
   auto at(size_t i, size_t j) const
   {
@@ -287,7 +284,6 @@ using WrapIfIntegral_t =
     std::conditional_t<std::is_arithmetic_v<T>,
                        Matrix<std::remove_reference_t<T>, 1, 1>,
                        std::remove_reference_t<T>>;
-
 
 template <typename E1, typename E2>
 constexpr auto operator*(const E1 &left, const E2 &right)
