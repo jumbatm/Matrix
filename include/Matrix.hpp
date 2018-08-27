@@ -29,8 +29,6 @@ class _expression
 {
 private:
   _expression() = default;
-  /*_expression(const _expression&) = default;
-  _expression(_expression&&) = default;*/
   friend E;
 
 public:
