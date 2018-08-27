@@ -252,18 +252,12 @@ struct _matrixElementExpr
 template <typename MatrixLike>
 struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
 {
-  MatrixLike m_matrix;
+  const MatrixLike m_matrix;
 
 public:
-  template <typename MatrixLikeDeduced>
-  _matrixTranspose(MatrixLikeDeduced &&matrix)
-    : m_matrix(std::forward<MatrixLike>(matrix))
+  _matrixTranspose(const MatrixLike &matrix)
+    : m_matrix(std::move(matrix))
   {
-  }
-
-  auto &at(size_t i, size_t j)
-  {
-    return m_matrix.at(j, i);
   }
 
   auto at(size_t i, size_t j) const
@@ -294,6 +288,7 @@ using WrapIfIntegral_t =
                        Matrix<std::remove_reference_t<T>, 1, 1>,
                        std::remove_reference_t<T>>;
 
+
 template <typename E1, typename E2>
 constexpr auto operator*(const E1 &left, const E2 &right)
 {
@@ -321,6 +316,12 @@ constexpr auto operator/(const E1 &left, const E2 &right)
 }
 
 }  // end namespace detail
+
+template <typename E>
+constexpr auto transpose(const E &expr)
+{
+  return detail::_matrixTranspose<E>(expr);
+}
 
 }  // end namespace mat
 
