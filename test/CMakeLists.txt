@@ -14,6 +14,7 @@ add_executable(Test
   construction_test.cpp
   iterators_test.cpp
   main_test.cpp
+  meta_test.cpp
   operators_test.cpp
   wrapper_test.cpp
   indexing_test.cpp

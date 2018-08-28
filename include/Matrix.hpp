@@ -194,15 +194,17 @@ enum class _operation
   CROSS_PRODUCT
 };
 
+template <typename T>
+using copy_if_rvalue_t = std::conditional_t<std::is_rvalue_reference_v<T>,
+                                            std::remove_reference_t<T>,
+                                            const T &>;
+
 template <typename L, typename R>
 struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
 {
-  using LeftExpr       = std::conditional_t<std::is_rvalue_reference_v<L>,
-                                      std::remove_reference_t<L>,
-                                      const L &>;
-  using RightExpr      = std::conditional_t<std::is_rvalue_reference_v<R>,
-                                       std::remove_reference_t<R>,
-                                       const R &>;
+  using LeftExpr  = copy_if_rvalue_t<L>;
+  using RightExpr = copy_if_rvalue_t<R>;
+
   using LeftExprNoRef  = std::remove_reference_t<LeftExpr>;
   using RightExprNoRef = std::remove_reference_t<RightExpr>;
 
@@ -221,9 +223,8 @@ struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
           || (RightExprNoRef::rows() == 1 && RightExprNoRef::cols() == 1),
       "Matrices must be the same size.");
 
-  template <typename LeftExprDeduced, typename RightExprDeduced>
-  constexpr _matrixElementExpr(LeftExprDeduced &&left,
-                               RightExprDeduced &&right,
+  constexpr _matrixElementExpr(LeftExpr left,
+                               RightExpr right,
                                const _operation &op_)
     : lhs(left), rhs(right),
       op(op_)  // May need to watch out with moving the values.
@@ -258,10 +259,6 @@ struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
   }
 };
 
-template <typename LeftExpr, typename RightExpr>
-_matrixElementExpr(LeftExpr &&, RightExpr &&)
-    ->_matrixElementExpr<LeftExpr &&, RightExpr &&>;
-
 template <typename MatrixLike>
 struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
 {
@@ -290,38 +287,61 @@ public:
  * Operator overloads - syntactic sugar.
  *******************************************************************************/
 
+template <typename From, typename To>
+struct rereference
+{
+  using type = To;
+};
+
+template <typename From, typename To>
+struct rereference<From &, To>
+{
+  using type = std::remove_reference_t<To> &;
+};
+
+template <typename From, typename To>
+struct rereference<From &&, To>
+{
+  using type = std::remove_reference_t<To> &&;
+};
+
+template <typename From, typename To>
+using rereference_t = typename rereference<From, To>::type;
+
 // Helper to wrap types in the specialisation above if they are an arithmetic
 // type.
 template <typename T>
-using WrapIfIntegral_t =
-    std::conditional_t<std::is_arithmetic_v<T>,
+using WrapIfIntegral_t = rereference_t<
+    T,
+    std::conditional_t<std::is_arithmetic_v<std::remove_reference_t<T>>,
                        Matrix<std::remove_reference_t<T>, 1, 1>,
-                       std::remove_reference_t<T>>;
+                       std::remove_reference_t<T>>>;
+
+template <typename LeftExpr, typename RightExpr>
+_matrixElementExpr(LeftExpr &&, RightExpr &&, const _operation)
+    ->_matrixElementExpr<WrapIfIntegral_t<LeftExpr> &&,
+                         WrapIfIntegral_t<RightExpr &&>>;
 
 template <typename E1, typename E2>
-constexpr auto operator*(const E1 &left, const E2 &right)
+constexpr auto operator*(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-      left, right, _operation::DOT_PRODUCT);
+  return _matrixElementExpr(left, right, _operation::DOT_PRODUCT);
 }
 
 template <typename E1, typename E2>
-constexpr auto operator+(const E1 &left, const E2 &right)
+constexpr auto operator+(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-      left, right, _operation::PLUS);
+  return _matrixElementExpr(left, right, _operation::PLUS);
 }
 template <typename E1, typename E2>
-constexpr auto operator-(const E1 &left, const E2 &right)
+constexpr auto operator-(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-      left, right, _operation::MINUS);
+  return _matrixElementExpr(left, right, _operation::MINUS);
 }
 template <typename E1, typename E2>
-constexpr auto operator/(const E1 &left, const E2 &right)
+constexpr auto operator/(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr<WrapIfIntegral_t<E1>, WrapIfIntegral_t<E2>>(
-      left, right, _operation::DOT_DIVIDE);
+  return _matrixElementExpr(left, right, _operation::DOT_DIVIDE);
 }
 
 }  // end namespace detail
