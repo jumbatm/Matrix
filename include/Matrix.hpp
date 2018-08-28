@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #define EXCEPT_ASSERT(x) \
@@ -193,28 +194,38 @@ enum class _operation
   CROSS_PRODUCT
 };
 
-template <typename LeftExpr, typename RightExpr>
-struct _matrixElementExpr
-  : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
+template <typename L, typename R>
+struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
 {
-  using value_type = decltype(typename LeftExpr::value_type{} *
-                              typename RightExpr::value_type{});
+  using LeftExpr       = std::conditional_t<std::is_rvalue_reference_v<L>,
+                                      std::remove_reference_t<L>,
+                                      const L &>;
+  using RightExpr      = std::conditional_t<std::is_rvalue_reference_v<R>,
+                                       std::remove_reference_t<R>,
+                                       const R &>;
+  using LeftExprNoRef  = std::remove_reference_t<LeftExpr>;
+  using RightExprNoRef = std::remove_reference_t<RightExpr>;
 
-  const LeftExpr lhs;
-  const RightExpr rhs;
+  using value_type = decltype(typename LeftExprNoRef::value_type{} *
+                              typename RightExprNoRef::value_type{});
+
+  LeftExpr lhs;
+  RightExpr rhs;
 
   const _operation op;
 
-  static_assert((LeftExpr::rows() == RightExpr::rows()
-                 && LeftExpr::cols() == RightExpr::cols())
-                    || (LeftExpr::rows() == 1 && LeftExpr::rows() == 1)
-                    || (RightExpr::rows() == 1 && RightExpr::cols() == 1),
-                "Matrices must be the same size.");
+  static_assert(
+      (LeftExprNoRef::rows() == RightExprNoRef::rows()
+       && LeftExprNoRef::cols() == RightExprNoRef::cols())
+          || (LeftExprNoRef::rows() == 1 && LeftExprNoRef::rows() == 1)
+          || (RightExprNoRef::rows() == 1 && RightExprNoRef::cols() == 1),
+      "Matrices must be the same size.");
 
-  constexpr _matrixElementExpr(const LeftExpr &left,
-                               const RightExpr &right,
+  template <typename LeftExprDeduced, typename RightExprDeduced>
+  constexpr _matrixElementExpr(LeftExprDeduced &&left,
+                               RightExprDeduced &&right,
                                const _operation &op_)
-    : lhs(std::move(left)), rhs(std::move(right)),
+    : lhs(left), rhs(right),
       op(op_)  // May need to watch out with moving the values.
   {
   }
@@ -246,6 +257,10 @@ struct _matrixElementExpr
     return RightExpr::cols();
   }
 };
+
+template <typename LeftExpr, typename RightExpr>
+_matrixElementExpr(LeftExpr &&, RightExpr &&)
+    ->_matrixElementExpr<LeftExpr &&, RightExpr &&>;
 
 template <typename MatrixLike>
 struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
