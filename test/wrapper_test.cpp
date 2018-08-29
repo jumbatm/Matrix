@@ -6,6 +6,21 @@
 
 using namespace mat;
 
+namespace
+{
+template <typename T>
+struct get_left_and_right_types;
+
+template <template <class, class> typename MatrixExpressionTemplate,
+          class LeftType,
+          class RightType>
+struct get_left_and_right_types<MatrixExpressionTemplate<LeftType, RightType>>
+{
+  using left_type  = LeftType;
+  using right_type = RightType;
+};
+}  // namespace
+
 TEST_CASE("Matrix<T, 1, 1> can be constructed from value")
 {
   Matrix<int, 1, 1> m = 3;
@@ -35,34 +50,15 @@ TEST_CASE("Wrapped scalars are copyable")
   REQUIRE(a.value == m.value);
 }
 
-template <typename T>
-struct splitter;
-
-template <template <class, class> typename MatrixExpressionTemplate,
-          class LeftType,
-          class RightType>
-struct splitter<MatrixExpressionTemplate<LeftType, RightType>>
-{
-  using left_type = LeftType;
-  using right_type = RightType;
-};
-
 TEST_CASE("Wrapped scalar causes a copy to happen for type")
 {
   Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
   auto expr           = a * 1;
 
-  f(expr);
+  using test = get_left_and_right_types<decltype(expr)>;
 
-  using test = splitter<decltype(expr)>;
-
-  // Check that the types passed in were correct.
   REQUIRE(std::is_reference_v<test::left_type>);
   REQUIRE(!std::is_reference_v<test::right_type>);
-
-  // Now check that the parameters were correct.
-  REQUIRE(std::is_reference_v<decltype(expr)::LeftExpr>);
-  REQUIRE(!std::is_reference_v<decltype(expr)::RightExpr>);
 }
 
 TEST_CASE("Wrapped scalars are compatible with expression templates.")
