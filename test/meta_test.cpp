@@ -2,7 +2,7 @@
 
 #include "Matrix.hpp"
 #include "catch.hpp"
-#include "test_helper.hpp"
+#include "test_helpers.hpp"
 
 TEST_CASE("rereference properly re-applies an lvalue reference on same type")
 {
