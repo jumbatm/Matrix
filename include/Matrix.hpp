@@ -175,7 +175,10 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
   {
     return 1;
   }
-  ~Matrix() {}
+  ~Matrix()
+  {
+    std::cout << "Destructed " << value << "\n";
+  }
 };
 
 namespace detail
@@ -251,11 +254,11 @@ struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
 
   constexpr static size_t rows()
   {
-    return LeftExpr::rows();
+    return LeftExprNoRef::rows();
   }
   constexpr static size_t cols()
   {
-    return RightExpr::cols();
+    return RightExprNoRef::cols();
   }
 };
 
@@ -318,14 +321,15 @@ using WrapIfIntegral_t = rereference_t<
                        std::remove_reference_t<T>>>;
 
 template <typename LeftExpr, typename RightExpr>
-_matrixElementExpr(LeftExpr &&, RightExpr &&, const _operation)
-    ->_matrixElementExpr<WrapIfIntegral_t<LeftExpr> &&,
-                         WrapIfIntegral_t<RightExpr &&>>;
+_matrixElementExpr(LeftExpr &&left, RightExpr &&right, const _operation &op_)
+    ->_matrixElementExpr<WrapIfIntegral_t<LeftExpr>,
+                         WrapIfIntegral_t<RightExpr>>;
 
 template <typename E1, typename E2>
 constexpr auto operator*(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr(left, right, _operation::DOT_PRODUCT);
+  return _matrixElementExpr(
+      std::forward<E1>(left), std::forward<E2>(right), _operation::DOT_PRODUCT);
 }
 
 template <typename E1, typename E2>
