@@ -42,4 +42,13 @@ void initialise_random(std::array<T, size> &toInitialise)
 }
 
 }  // namespace
+
+namespace
+{
+template <typename T>
+static void f(T)
+{
+  std::cout << __PRETTY_FUNCTION__ << "\n";
+}
+}  // namespace
 #endif

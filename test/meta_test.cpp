@@ -2,14 +2,7 @@
 
 #include "Matrix.hpp"
 #include "catch.hpp"
-namespace
-{
-template <typename T>
-static void f()
-{
-  std::cout << __PRETTY_FUNCTION__ << "\n";
-}
-}  // namespace
+#include "test_helper.hpp"
 
 TEST_CASE("rereference properly re-applies an lvalue reference on same type")
 {
