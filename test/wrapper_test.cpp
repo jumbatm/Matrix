@@ -2,6 +2,7 @@
 
 #include "Matrix.hpp"
 #include "catch.hpp"
+#include "test_helpers.hpp"
 
 using namespace mat;
 
@@ -32,6 +33,36 @@ TEST_CASE("Wrapped scalars are copyable")
   Matrix<int, 1, 1> a = m;
 
   REQUIRE(a.value == m.value);
+}
+
+template <typename T>
+struct splitter;
+
+template <template <class, class> typename MatrixExpressionTemplate,
+          class LeftType,
+          class RightType>
+struct splitter<MatrixExpressionTemplate<LeftType, RightType>>
+{
+  using left_type = LeftType;
+  using right_type = RightType;
+};
+
+TEST_CASE("Wrapped scalar causes a copy to happen for type")
+{
+  Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
+  auto expr           = a * 1;
+
+  f(expr);
+
+  using test = splitter<decltype(expr)>;
+
+  // Check that the types passed in were correct.
+  REQUIRE(std::is_reference_v<test::left_type>);
+  REQUIRE(!std::is_reference_v<test::right_type>);
+
+  // Now check that the parameters were correct.
+  REQUIRE(std::is_reference_v<decltype(expr)::LeftExpr>);
+  REQUIRE(!std::is_reference_v<decltype(expr)::RightExpr>);
 }
 
 TEST_CASE("Wrapped scalars are compatible with expression templates.")
