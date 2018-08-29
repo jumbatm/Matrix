@@ -175,10 +175,8 @@ struct Matrix<T, 1, 1> : public detail::_expression<Matrix<T, 1, 1>>
   {
     return 1;
   }
-  ~Matrix()
-  {
-    std::cout << "Destructed " << value << "\n";
-  }
+
+  ~Matrix() {}
 };
 
 namespace detail
@@ -202,11 +200,12 @@ using copy_if_rvalue_t = std::conditional_t<std::is_rvalue_reference_v<T>,
                                             std::remove_reference_t<T>,
                                             const T &>;
 
-template <typename L, typename R>
-struct _matrixElementExpr : public _expression<_matrixElementExpr<L, R>>
+template <typename LeftExpr, typename RightExpr>
+struct _matrixElementExpr
+  : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
 {
-  using LeftExpr  = copy_if_rvalue_t<L>;
-  using RightExpr = copy_if_rvalue_t<R>;
+  // using LeftExpr  = copy_if_rvalue_t<L>;
+  // using RightExpr = copy_if_rvalue_t<R>;
 
   using LeftExprNoRef  = std::remove_reference_t<LeftExpr>;
   using RightExprNoRef = std::remove_reference_t<RightExpr>;
