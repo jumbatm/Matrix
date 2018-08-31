@@ -21,6 +21,20 @@ struct get_left_and_right_types<MatrixExpressionTemplate<LeftType, RightType>>
 };
 }  // namespace
 
+TEST_CASE("Wrapped scalar causes a copy into the expression template")
+{
+  // This test is to ensure that the expression template doesn't create a
+  // reference to the prvalue created from the conversion.
+
+  Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
+  auto expr           = a * 1;
+
+  using test = get_left_and_right_types<decltype(expr)>;
+
+  REQUIRE(std::is_reference_v<test::left_type>);
+  REQUIRE(!std::is_reference_v<test::right_type>);
+}
+
 TEST_CASE("Matrix<T, 1, 1> can be constructed from value")
 {
   Matrix<int, 1, 1> m = 3;
@@ -48,17 +62,6 @@ TEST_CASE("Wrapped scalars are copyable")
   Matrix<int, 1, 1> a = m;
 
   REQUIRE(a.value == m.value);
-}
-
-TEST_CASE("Wrapped scalar causes a copy to happen for type")
-{
-  Matrix<int, 2, 2> a = { { 10, 20 }, { 30, 40 } };
-  auto expr           = a * 1;
-
-  using test = get_left_and_right_types<decltype(expr)>;
-
-  REQUIRE(std::is_reference_v<test::left_type>);
-  REQUIRE(!std::is_reference_v<test::right_type>);
 }
 
 TEST_CASE("Wrapped scalars are compatible with expression templates.")
