@@ -267,7 +267,10 @@ struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
   const MatrixLike m_matrix;
 
 public:
-  _matrixTranspose(const MatrixLike &matrix) : m_matrix(std::move(matrix)) {}
+  template <typename MatrixLike_ = MatrixLike>
+  _matrixTranspose(MatrixLike_ &&matrix) : m_matrix(matrix)
+  {
+  }
 
   auto at(size_t i, size_t j) const
   {
@@ -284,6 +287,9 @@ public:
     return MatrixLike::rows();
   }
 };
+
+template <typename T>
+_matrixTranspose(T &&val)->_matrixTranspose<T>;
 
 /********************************************************************************
  * Operator overloads - syntactic sugar.
@@ -334,25 +340,28 @@ constexpr auto operator*(E1 &&left, E2 &&right)
 template <typename E1, typename E2>
 constexpr auto operator+(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr(left, right, _operation::PLUS);
+  return _matrixElementExpr(
+      std::forward<E1>(left), std::forward<E2>(right), _operation::PLUS);
 }
 template <typename E1, typename E2>
 constexpr auto operator-(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr(left, right, _operation::MINUS);
+  return _matrixElementExpr(
+      std::forward<E1>(left), std::forward<E2>(right), _operation::MINUS);
 }
 template <typename E1, typename E2>
 constexpr auto operator/(E1 &&left, E2 &&right)
 {
-  return _matrixElementExpr(left, right, _operation::DOT_DIVIDE);
+  return _matrixElementExpr(
+      std::forward<E1>(left), std::forward<E2>(right), _operation::DOT_DIVIDE);
 }
 
 }  // end namespace detail
 
 template <typename E>
-constexpr auto transpose(const E &expr)
+constexpr auto transpose(E &&expr)
 {
-  return detail::_matrixTranspose<E>(expr);
+  return detail::_matrixTranspose(std::forward<E>(expr));
 }
 
 }  // end namespace mat
