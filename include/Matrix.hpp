@@ -1,6 +1,6 @@
 #pragma once
-#ifndef JUMBATM_MATRIX_H_INCLUDED  // Begin Header guard.
-#define JUMBATM_MATRIX_H_INCLUDED
+#ifndef JUMBATM_MATRIX_HPP_INCLUDED  // Begin Header guard.
+#define JUMBATM_MATRIX_HPP_INCLUDED
 
 #include <array>
 #include <cstddef>
