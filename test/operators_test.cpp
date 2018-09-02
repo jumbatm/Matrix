@@ -1,5 +1,6 @@
 #include "Matrix.hpp"
 #include "catch.hpp"
+#include "mocks.hpp"
 #include "test_helpers.hpp"
 
 using namespace mat;
@@ -98,4 +99,16 @@ TEST_CASE(
   int value = 1;
   mat_for_each(mat, [value](int val) mutable { REQUIRE(val == value++); });
   mat_for_each(mat, [&value](int val) mutable { REQUIRE(val == value++); });
+}
+
+TEST_CASE("Expression templates with lvalues do not result in a copy.")
+{
+  using mat::detail::_matrixElementExpr;
+  using mat::detail::_operation;
+  using mat::mocks::Uncopyable;
+  Uncopyable a, b;
+
+  _matrixElementExpr m(a, b, _operation::PLUS);
+
+  REQUIRE(m.at(1, 1) == a.at(1, 1) + b.at(1, 1));
 }
