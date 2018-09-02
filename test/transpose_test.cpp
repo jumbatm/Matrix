@@ -1,5 +1,6 @@
 #include "Matrix.hpp"
 #include "catch.hpp"
+#include "mocks.hpp"
 #include "test_helpers.hpp"
 
 using namespace mat;
@@ -26,4 +27,16 @@ TEST_CASE("Transpose on matrices yields expected result.")
   {
     REQUIRE(elem == expectedValues[i++]);
   }
+}
+
+TEST_CASE("Use of _matrixTranspose results in no copy.")
+{
+  using mat::detail::_operation;
+  using mat::mocks::Uncopyable;
+
+  Uncopyable a;
+
+  mat::detail::_matrixTranspose m(a);
+
+  REQUIRE(true);
 }
