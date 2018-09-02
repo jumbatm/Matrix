@@ -195,16 +195,10 @@ enum class _operation
   CROSS_PRODUCT
 };
 
-template <typename T>
-using copy_if_rvalue_t = std::conditional_t<std::is_rvalue_reference_v<T>,
-                                            std::remove_reference_t<T>,
-                                            const T &>;
-
 template <typename LeftExpr, typename RightExpr>
 struct _matrixElementExpr
   : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
 {
-
   using LeftExprNoRef  = std::remove_reference_t<LeftExpr>;
   using RightExprNoRef = std::remove_reference_t<RightExpr>;
 
