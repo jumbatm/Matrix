@@ -204,8 +204,6 @@ template <typename LeftExpr, typename RightExpr>
 struct _matrixElementExpr
   : public _expression<_matrixElementExpr<LeftExpr, RightExpr>>
 {
-  // using LeftExpr  = copy_if_rvalue_t<L>;
-  // using RightExpr = copy_if_rvalue_t<R>;
 
   using LeftExprNoRef  = std::remove_reference_t<LeftExpr>;
   using RightExprNoRef = std::remove_reference_t<RightExpr>;
@@ -213,8 +211,8 @@ struct _matrixElementExpr
   using value_type = decltype(typename LeftExprNoRef::value_type{} *
                               typename RightExprNoRef::value_type{});
 
-  LeftExpr lhs;
-  RightExpr rhs;
+  const LeftExpr lhs;
+  const RightExpr rhs;
 
   const _operation op;
 
@@ -228,12 +226,12 @@ struct _matrixElementExpr
   constexpr _matrixElementExpr(LeftExpr left,
                                RightExpr right,
                                const _operation &op_)
-    : lhs(left), rhs(right),
-      op(op_)  // May need to watch out with moving the values.
+    : lhs(left), rhs(right), op(op_)
   {
   }
 
   value_type at(const size_t row, const size_t column) const
+      noexcept  // Will force abort() on exception.
   {
     // TODO: Can this be dispatched statically?
     switch (op)
@@ -267,10 +265,7 @@ struct _matrixTranspose : public _expression<_matrixTranspose<MatrixLike>>
   const MatrixLike m_matrix;
 
 public:
-  template <typename MatrixLike_ = MatrixLike>
-  _matrixTranspose(MatrixLike_ &&matrix) : m_matrix(matrix)
-  {
-  }
+  _matrixTranspose(MatrixLike matrix) : m_matrix(matrix) {}
 
   auto at(size_t i, size_t j) const
   {
@@ -295,6 +290,7 @@ _matrixTranspose(T &&val)->_matrixTranspose<T>;
  * Operator overloads - syntactic sugar.
  *******************************************************************************/
 
+// Helper metaprogramming stuff.
 template <typename From, typename To>
 struct rereference
 {
