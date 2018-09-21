@@ -13,14 +13,6 @@
 #define EXCEPT_ASSERT(x) \
   (void)(!(x) ? throw std::runtime_error("mat: Assertion failed: " #x) : 0)
 
-/*******************************************************************************
- * Matrix:
- *
- * A statically-sized matrix type developed for a class on parallel processing
- * at university. Each week, this implementation is improved with concepts that
- * are taught in the subject.
- ******************************************************************************/
-
 namespace mat
 {
 namespace detail
