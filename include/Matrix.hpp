@@ -422,28 +422,63 @@ constexpr auto transpose(E &&expr)
   return detail::_matrixTranspose(std::forward<E>(expr));
 }
 
-// Calculates the inverse of a matrix using naive Gaussian Elimination method.
-//
-// Note: This is currently a C-like naive implementation which will be improved
-// later on.
+// Uses pivotless Gaussian Elimination to solve a matrix.
 template <typename MatrixLike, typename ColumnVector>
-auto inverse(MatrixLike &&matrix) -> Matrix<typename MatrixLike::value_type,
-                                            MatrixLike::rows(),
-                                            MatrixLike::cols()>
+auto solve(MatrixLike &&matrix, ColumnVector &&b)
 {
-  // For this to work, it must be a square matrix.
+  // For this to work, it must be a square matrix. Statically ensure that this
+  // will be so.
   static_assert(matrix.cols() == matrix.rows());
+
+  // We also need the result to only be a column vector. It shall also only be
+  // as tall as the number of entries in the matrix.
+  static_assert(b.cols() == 1 && b.rows() == matrix.rows());
+
+  // Finally, see the note below.
+  static_assert(!std::is_integral_v<typename MatrixLike::value_type>);
+
   constexpr auto N = matrix.cols();
 
-  using result_type = Matrix<typename MatrixLike::value_type,
-                             MatrixLike::rows(),
-                             MatrixLike::cols()>;
+  // Diagonalise.
+  for (size_t k = 1; k <= N - 1; ++k)    // for k = 1 : n-1
+    for (size_t i = k + 1; i <= N; ++i)  // for i = k+1 : n
+    {
+      matrix.at(i, k) = matrix.at(i, k) / matrix.at(k, k);
+      // TODO: PLEASE NOTE: Because this does the storage into the matrix
+      // itself, it's not suitable for non-int types. Possible to replace this
+      // variable?
+      for (size_t j = k + 1; j <= N; ++j)
+      {
+        matrix.at(i, j) = matrix.at(i, j) - matrix.at(i, k) * matrix.at(k, j);
+      }
+    }
 
-  // Create our result. It begins as an identity matrix.
-  detail::_matrixRowSwapper<result_type> result =
-      make_identity<MatrixLike::result_type, N>;
+  // This is our result vector - x in Ax = b
+  Matrix<double, b.rows(), 1> result;
 
-  // Now we need to work though and re
+  // We now perform forward substitution to solve Ld = b.
+  result.at(1, 1) = b.at(1, 1);
+  for (size_t i = 2; i <= N; ++i)
+  {
+    double s = 0;
+    for (size_t j = 1; j <= i - 1; ++j)
+    {
+      s += matrix.at(i, j) * result.at(j, 1);
+    }
+    result.at(i, 1) = b.at(i, 1) - s;
+  }
+
+  // Then, perform backsubstitution to solve Ux = d.
+  result.at(N, 1) / matrix.at(N, N);
+  for (size_t i = N - 1; i >= 1; --i)
+  {
+    double s = 0;
+    for (size_t j = i + 1; j <= N; ++j)
+    {
+      s += matrix.at(i, j) * result.at(j, 1);
+    }
+  }
+  return result;
 }
 
 }  // end namespace mat
