@@ -503,6 +503,8 @@ auto augment(Left &&left, Right &&right)
 template <typename MatrixLike, typename ColumnVector>
 auto solve(MatrixLike &&A, ColumnVector &&b)
 {
+  // TODO: Make work with move semantics. At the moment, this function causes
+  // side effects to whatever's passed in.
   using MatrixType       = std::remove_reference_t<MatrixLike>;
   using ColumnVectorType = std::remove_reference_t<ColumnVector>;
 
