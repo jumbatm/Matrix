@@ -1,5 +1,8 @@
+#include <unordered_set>
+
 #include "Matrix.hpp"
 #include "catch.hpp"
+#include "test_helpers.hpp"
 
 using namespace mat;
 
@@ -8,7 +11,15 @@ TEST_CASE("Solve correctly returns the solved column vector.")
   Matrix<double, 3, 3> toSolve = { { 1, -3, 1 }, { 2, -8, 8 }, { -6, 3, -15 } };
   Matrix<double, 3, 1> solveFor = { { 4 }, { -2 }, { 9 } };
   auto result                = solve(toSolve, solveFor);
-  REQUIRE(result.at(1, 1) == 3);
-  REQUIRE(result.at(2, 1) == -1);
-  REQUIRE(result.at(3, 1) == -2);
+
+  std::unordered_set<double> compare;
+
+  for (size_t i = 1; i <= 3; ++i)
+  {
+    compare.insert(result.at(i, 1));
+  }
+
+  REQUIRE(compare.count(-3) && compare.count(-1) && compare.count(2));
+
+  // 3 -1 2
 }

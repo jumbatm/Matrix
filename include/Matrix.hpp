@@ -454,13 +454,14 @@ auto solve(MatrixLike &&matrix, ColumnVector &&b)
   for (size_t k = 1; k <= N - 1; ++k)    // for k = 1 : n-1
     for (size_t i = k + 1; i <= N; ++i)  // for i = k+1 : n
     {
-      matrix.at(i, k) = matrix.at(i, k) / matrix.at(k, k);
-      // TODO: PLEASE NOTE: Because this does the storage into the matrix
-      // itself, it's not suitable for non-int types. Possible to replace this
-      // variable?
+      // matrix.at(i, k) = matrix.at(i, k) / matrix.at(k, k);
+      double ratio = matrix.at(i, k) / matrix.at(k, k);
+      // TODO: PLEASE NOTE: Because this does the storage into
+      // the matrix itself, it's not suitable for non-int
+      // types. Possible to replace this variable?
       for (size_t j = k + 1; j <= N; ++j)
       {
-        matrix.at(i, j) = matrix.at(i, j) - matrix.at(i, k) * matrix.at(k, j);
+        matrix.at(i, j) = matrix.at(i, j) - ratio * matrix.at(k, j);
       }
     }
 

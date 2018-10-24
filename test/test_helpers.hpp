@@ -3,6 +3,7 @@
 #define JUMBATM_MATRIX_TEST_HELPERS_INCLUDED
 
 #include <random>
+#include <unordered_set>
 
 #include "Matrix.hpp"
 
@@ -39,6 +40,15 @@ void initialise_random(std::array<T, size> &toInitialise)
   {
     elem = rd();
   }
+}
+
+// Check to see if a given value is within a set of values.
+template <typename T, typename... Args>
+bool result_in(T &&value, Args &&... set)
+{
+  std::unordered_set<T> check = { set... };
+
+  return check.count(value);
 }
 
 }  // namespace
