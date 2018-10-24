@@ -74,11 +74,16 @@ public:
   }
 
   // If we're provided with a single dimension, assume that it's a row vector.
-  // That way, column vectors can be declared like:
-  // { {1},
-  //   {2},
-  //   {3} };
-  constexpr Matrix(const std::initializer_list<T> &init) : m_data(init) {}
+  // Constructor is only considered a candidate to overload resolution if the
+  // inner type is NOT a std::initializer_list - else we'd have an ambiguous
+  // constructor for nested initializer_lists.
+  template <typename U = T>
+  constexpr Matrix(const std::initializer_list<U> &init,
+                   typename std::enable_if_t<
+                       !std::is_same_v<std::initializer_list<T>, U>> * = 0)
+    : m_data(init)
+  {
+  }
   // Construct from an expression.
 
   template <typename MatrixType>
