@@ -516,8 +516,8 @@ auto solve(MatrixLike &&A, ColumnVector &&b)
 
   // We also need the result to only be a column vector. It shall also only
   // be as tall as the number of entries in the matrix.
-  static_assert(ColumnVectorType::cols() == 1
-                && ColumnVectorType::rows() == MatrixType::rows());
+  static_assert(ColumnVectorType::cols() == 1);
+  static_assert(ColumnVectorType::rows() == MatrixType::rows());
 
   // Finally, see the note below.
   static_assert(!std::is_integral_v<typename MatrixType::value_type>);
