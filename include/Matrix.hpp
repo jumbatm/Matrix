@@ -520,28 +520,44 @@ auto solve(MatrixLike &&A, ColumnVector &&b)
   // Finally, see the note below.
   static_assert(!std::is_integral_v<typename MatrixType::value_type>);
 
-  auto matrix = augment(A, b);
+  // Create the augmented matrix.
+  auto augmented_matrix = augment(A, b);
 
   constexpr auto N = MatrixType::cols();
 
   Matrix<double, N, 1> result;
 
-  // Diagonalise.
-  for (size_t j = 0; j <= N; ++j)    // row
+  // Push to upper row echelon form.
+  for (size_t j = 1; j <= N; ++j)    // row
     for (size_t i = 1; i <= N; ++i)  // column
     {
-      if (j > i)  // We're in an upper triangle.
+      if (i > j)  // We're in an upper triangle.
       {
-        double factor =
-            matrix.at(i, j) / matrix.at(j, j);  // Factor to reduce to 1.
-        // Deal with our matrix.
+        double factor = augmented_matrix.at(i, j)
+                        / augmented_matrix.at(j, j);  // Factor to reduce to 1.
+        // Deal with our augmented_matrix.
         for (size_t k = 1; k <= N + 1; ++k)
         {
           // Goes across row, carrying the multiplication from pivot onwards.
-          matrix.at(i, k) -= factor * matrix.at(j, k);
+          augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
         }
       }
     }
+  // And, finally, the very bottom entry.
+  result.at(N, 1) = augmented_matrix.at(N, N + 1) / augmented_matrix.at(N, N);
+
+  // Back-substitution.
+  for (size_t i = N - 1; i >= 1; --i)
+  {
+    double sum = 0;
+    for (size_t j = i + 1; j <= N; ++j)
+    {
+      sum += augmented_matrix.at(i, j) * result.at(j, 1);
+    }
+    result.at(i, 1) =
+        (augmented_matrix.at(i, N + 1) - sum) / augmented_matrix.at(i, i);
+  }
+
   return result;
 }
 
