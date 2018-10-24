@@ -10,8 +10,13 @@
 #include <type_traits>
 #include <utility>
 
-#define EXCEPT_ASSERT(x) \
-  (void)(!(x) ? throw std::runtime_error("mat: Assertion failed: " #x) : 0)
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+
+#define EXCEPT_ASSERT(x)                                                    \
+  (void)(!(x) ? throw std::runtime_error("mat: Assertion failed: " __FILE__ \
+                                         ":" STRINGIFY(__LINE__) #x)        \
+              : 0)
 
 namespace mat
 {
@@ -277,6 +282,66 @@ public:
 template <typename T>
 _matrixTranspose(T &&val)->_matrixTranspose<T>;
 
+template <typename LeftExpr, typename RightExpr>
+struct _matrixAugment : public _expression<_matrixAugment<LeftExpr, RightExpr>>
+{
+  LeftExpr m_left;
+  RightExpr m_right;
+
+  using LeftExprType  = std::remove_reference_t<LeftExpr>;
+  using RightExprType = std::remove_reference_t<RightExpr>;
+
+  static_assert(LeftExprType::rows() == RightExprType::rows());
+
+public:
+  // Construct.
+  _matrixAugment(LeftExpr left, RightExpr right) : m_left(left), m_right(right)
+  {
+  }
+
+  // Rows and cols getters.
+  constexpr static size_t rows()
+  {
+    return LeftExprType::rows();
+  }
+
+  constexpr static size_t cols()
+  {
+    return RightExprType::cols() + LeftExprType::cols();
+  }
+
+  constexpr auto &at(size_t row, size_t column)
+  {
+    EXCEPT_ASSERT(0 < row && row <= rows());
+    EXCEPT_ASSERT(0 < column && column <= cols());
+
+    if (column > LeftExprType::cols())
+    {
+      return m_right.at(row, column - LeftExprType::cols());
+    }
+
+    return m_left.at(row, column);
+  }
+
+  constexpr auto at(size_t row, size_t column) const
+  {
+    // TODO: Remove code dupe.
+    EXCEPT_ASSERT(0 < row && row < rows());
+    EXCEPT_ASSERT(0 < column && column < cols());
+
+    if (column > LeftExprType::cols())
+    {
+      return m_right.at(row, column - LeftExprType::cols());
+    }
+
+    return m_left.at(row, column);
+  }
+};
+
+template <typename LeftExpr, typename RightExpr>
+_matrixAugment(LeftExpr &&left, RightExpr &&right)
+    ->_matrixAugment<LeftExpr, RightExpr>;
+
 /********************************************************************************
  * Operator overloads - syntactic sugar.
  *******************************************************************************/
@@ -427,9 +492,16 @@ constexpr auto transpose(E &&expr)
   return detail::_matrixTranspose(std::forward<E>(expr));
 }
 
+template <typename Left, typename Right>
+auto augment(Left &&left, Right &&right)
+{
+  return detail::_matrixAugment(std::forward<Left>(left),
+                                std::forward<Right>(right));
+}
+
 // Uses pivotless Gaussian Elimination to solve a matrix.
 template <typename MatrixLike, typename ColumnVector>
-auto solve(MatrixLike &&matrix, ColumnVector &&b)
+auto solve(MatrixLike &&A, ColumnVector &&b)
 {
   using MatrixType       = std::remove_reference_t<MatrixLike>;
   using ColumnVectorType = std::remove_reference_t<ColumnVector>;
@@ -448,48 +520,28 @@ auto solve(MatrixLike &&matrix, ColumnVector &&b)
   // Finally, see the note below.
   static_assert(!std::is_integral_v<typename MatrixType::value_type>);
 
+  auto matrix = augment(A, b);
+
   constexpr auto N = MatrixType::cols();
 
+  Matrix<double, N, 1> result;
+
   // Diagonalise.
-  for (size_t k = 1; k <= N - 1; ++k)    // for k = 1 : n-1
-    for (size_t i = k + 1; i <= N; ++i)  // for i = k+1 : n
+  for (size_t j = 0; j <= N; ++j)    // row
+    for (size_t i = 1; i <= N; ++i)  // column
     {
-      // matrix.at(i, k) = matrix.at(i, k) / matrix.at(k, k);
-      double ratio = matrix.at(i, k) / matrix.at(k, k);
-      // TODO: PLEASE NOTE: Because this does the storage into
-      // the matrix itself, it's not suitable for non-int
-      // types. Possible to replace this variable?
-      for (size_t j = k + 1; j <= N; ++j)
+      if (j > i)  // We're in an upper triangle.
       {
-        matrix.at(i, j) = matrix.at(i, j) - ratio * matrix.at(k, j);
+        double factor =
+            matrix.at(i, j) / matrix.at(j, j);  // Factor to reduce to 1.
+        // Deal with our matrix.
+        for (size_t k = 1; k <= N + 1; ++k)
+        {
+          // Goes across row, carrying the multiplication from pivot onwards.
+          matrix.at(i, k) -= factor * matrix.at(j, k);
+        }
       }
     }
-
-  // This is our result vector - x in Ax = b
-  Matrix<double, ColumnVectorType::rows(), 1> result;
-
-  // We now perform forward substitution to solve Ld = b.
-  result.at(1, 1) = b.at(1, 1);
-  for (size_t i = 2; i <= N; ++i)
-  {
-    double s = 0;
-    for (size_t j = 1; j <= i - 1; ++j)
-    {
-      s += matrix.at(i, j) * result.at(j, 1);
-    }
-    result.at(i, 1) = b.at(i, 1) - s;
-  }
-
-  // Then, perform backsubstitution to solve Ux = d.
-  result.at(N, 1) /= matrix.at(N, N);
-  for (size_t i = N - 1; i >= 1; --i)
-  {
-    double s = 0;
-    for (size_t j = i + 1; j <= N; ++j)
-    {
-      s += matrix.at(i, j) * result.at(j, 1);
-    }
-  }
   return result;
 }
 

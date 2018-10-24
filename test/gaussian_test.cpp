@@ -5,6 +5,13 @@
 #include "test_helpers.hpp"
 
 using namespace mat;
+TEST_CASE("Solve 2x2 correctly.")
+{
+  Matrix<double, 2, 2> toSolve = { { 1, 2 }, { 3, 4 } };
+  Matrix<double, 2, 1> solveFor = { { 30 }, { 90 } };
+
+  auto result = solve(toSolve, solveFor);
+}
 
 TEST_CASE("Solve correctly returns the solved column vector.")
 {
@@ -19,7 +26,8 @@ TEST_CASE("Solve correctly returns the solved column vector.")
     compare.insert(result.at(i, 1));
   }
 
-  REQUIRE(compare.count(-3) && compare.count(-1) && compare.count(2));
+  REQUIRE(compare.count(3) && compare.count(-1) && compare.count(-2));
 
-  // 3 -1 2
+  // 3 -1 -2
 }
+
