@@ -36,7 +36,9 @@ target_compile_options(Test
   -Wall
   -Wextra
   -Wpedantic
+  -g
   )
+
 
 add_test(NAME "Matrix tests"
   COMMAND Test)

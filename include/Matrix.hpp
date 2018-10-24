@@ -338,26 +338,53 @@ constexpr auto operator/(E1 &&left, E2 &&right)
       std::forward<E1>(left), std::forward<E2>(right), _operation::DOT_DIVIDE);
 }
 
+// Swaps rows in an O(1) fashion by instead swapping their reference.
 template <typename MatrixLike>
 class _matrixRowSwapper
   : public detail::_expression<_matrixRowSwapper<MatrixLike>>
 {
   // Store whatever we were called with.
-  MatrixLike matrix;
+  MatrixLike m_matrix;
 
-  // Stores the mappings from rows to columns.
-  size_t row_mapping[MatrixLike::rows()] = { 0 };
+  // For access to static members, as it's possible to store
+  using MatrixType = std::remove_reference_t<MatrixLike>;
 
-  // We fill it with a sentinel value. As we
-  // are 1-index, a value 0 means unmodified
-  // TODO: Sparse matrix for large sizes.
+  // Stores the mappings from rows to columns. TODO: Large matrix case? Will
+  // need to be sparse.
+  size_t row_mapping[MatrixType::rows()] = { 0 };
+  // Value of 0 means unswapped.
 
-  // Swaps rows in an O(1) fashion by instead swapping their reference.
+public:
+  _matrixRowSwapper(MatrixLike value)
+    : m_matrix(std::forward<MatrixLike>(value))
+  {
+  }
+
   auto at(size_t row, size_t column) const
   {
-    // TODO: As this swaps rows, we instead look up what the interpreted row
-    // will be.
-    return matrix.at(row_mapping[row], column);
+    return m_matrix.at(row_mapping[row - 1], column);
+  }
+
+  void swapRows(const size_t rowA, const size_t rowB)
+  {
+    // We swap the two entries in the row mapping table.
+    EXCEPT_ASSERT(rowA <= m_matrix.rows() && rowB <= m_matrix.cols());
+
+    // If either one of the rows is zero, we fill it in with its actual value.
+    if (!row_mapping[rowA - 1])
+    {
+      // rowA used to contain a sentinel value. We need to replace it with its
+      // actual value.
+      row_mapping[rowA - 1] = rowA;
+    }
+    if (!row_mapping[rowB - 1])
+    {
+      // Same for row B.
+      row_mapping[rowB - 1] = rowB;
+    }
+
+    // Swap the entries, thus swapping the rows.
+    std::swap(row_mapping[rowA - 1], row_mapping[rowB - 1]);
   }
 
   constexpr static size_t rows()
@@ -377,10 +404,46 @@ _matrixRowSwapper(T &&val)->_matrixRowSwapper<T>;
 
 }  // end namespace detail
 
+template <typename T, size_t N>
+Matrix<T, N, N> make_identity()
+{
+  Matrix<T, N, N> result;  // Default constructor zeros out all entries.
+
+  for (size_t i = 1; i <= N; ++i)
+  {
+    result.at(i, i) = 1;
+  }
+  return result;
+}
+
 template <typename E>
 constexpr auto transpose(E &&expr)
 {
   return detail::_matrixTranspose(std::forward<E>(expr));
+}
+
+// Calculates the inverse of a matrix using naive Gaussian Elimination method.
+//
+// Note: This is currently a C-like naive implementation which will be improved
+// later on.
+template <typename MatrixLike, typename ColumnVector>
+auto inverse(MatrixLike &&matrix) -> Matrix<typename MatrixLike::value_type,
+                                            MatrixLike::rows(),
+                                            MatrixLike::cols()>
+{
+  // For this to work, it must be a square matrix.
+  static_assert(matrix.cols() == matrix.rows());
+  constexpr auto N = matrix.cols();
+
+  using result_type = Matrix<typename MatrixLike::value_type,
+                             MatrixLike::rows(),
+                             MatrixLike::cols()>;
+
+  // Create our result. It begins as an identity matrix.
+  detail::_matrixRowSwapper<result_type> result =
+      make_identity<MatrixLike::result_type, N>;
+
+  // Now we need to work though and re
 }
 
 }  // end namespace mat
