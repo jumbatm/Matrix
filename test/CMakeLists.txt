@@ -20,6 +20,7 @@ add_executable(Test
   indexing_test.cpp
   ../src/Matrix.cpp
   transpose_test.cpp
+  inverse_test.cpp
   )
 
 target_include_directories(Test
