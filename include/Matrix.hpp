@@ -263,12 +263,12 @@ public:
     return m_matrix.at(j, i);
   }
 
-  static size_t rows()
+  constexpr static size_t rows()
   {
     return MatrixLike::cols();
   }
 
-  static size_t cols()
+  constexpr static size_t cols()
   {
     return MatrixLike::rows();
   }
@@ -431,18 +431,24 @@ constexpr auto transpose(E &&expr)
 template <typename MatrixLike, typename ColumnVector>
 auto solve(MatrixLike &&matrix, ColumnVector &&b)
 {
+  using MatrixType       = std::remove_reference_t<MatrixLike>;
+  using ColumnVectorType = std::remove_reference_t<ColumnVector>;
+
   // For this to work, it must be a square matrix. Statically ensure that this
   // will be so.
-  static_assert(matrix.cols() == matrix.rows());
+  static_assert(MatrixType::cols() == MatrixType::rows());
+  // TODO: Come back and investigate why using `matrix` or `b` directly is not a
+  // constexpr-able.
 
-  // We also need the result to only be a column vector. It shall also only be
-  // as tall as the number of entries in the matrix.
-  static_assert(b.cols() == 1 && b.rows() == matrix.rows());
+  // We also need the result to only be a column vector. It shall also only
+  // be as tall as the number of entries in the matrix.
+  static_assert(ColumnVectorType::cols() == 1
+                && ColumnVectorType::rows() == MatrixType::rows());
 
   // Finally, see the note below.
-  static_assert(!std::is_integral_v<typename MatrixLike::value_type>);
+  static_assert(!std::is_integral_v<typename MatrixType::value_type>);
 
-  constexpr auto N = matrix.cols();
+  constexpr auto N = MatrixType::cols();
 
   // Diagonalise.
   for (size_t k = 1; k <= N - 1; ++k)    // for k = 1 : n-1
@@ -459,7 +465,7 @@ auto solve(MatrixLike &&matrix, ColumnVector &&b)
     }
 
   // This is our result vector - x in Ax = b
-  Matrix<double, b.rows(), 1> result;
+  Matrix<double, ColumnVectorType::rows(), 1> result;
 
   // We now perform forward substitution to solve Ld = b.
   result.at(1, 1) = b.at(1, 1);
@@ -474,7 +480,7 @@ auto solve(MatrixLike &&matrix, ColumnVector &&b)
   }
 
   // Then, perform backsubstitution to solve Ux = d.
-  result.at(N, 1) / matrix.at(N, N);
+  result.at(N, 1) /= matrix.at(N, N);
   for (size_t i = N - 1; i >= 1; --i)
   {
     double s = 0;
