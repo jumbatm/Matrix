@@ -21,6 +21,8 @@ add_executable(Test
   ../src/Matrix.cpp
   transpose_test.cpp
   inverse_test.cpp
+  gaussian_test.cpp
+  rowswapper_test.cpp
   )
 
 target_include_directories(Test

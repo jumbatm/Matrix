@@ -338,6 +338,43 @@ constexpr auto operator/(E1 &&left, E2 &&right)
       std::forward<E1>(left), std::forward<E2>(right), _operation::DOT_DIVIDE);
 }
 
+template <typename MatrixLike>
+class _matrixRowSwapper
+  : public detail::_expression<_matrixRowSwapper<MatrixLike>>
+{
+  // Store whatever we were called with.
+  MatrixLike matrix;
+
+  // Stores the mappings from rows to columns.
+  size_t row_mapping[MatrixLike::rows()] = { 0 };
+
+  // We fill it with a sentinel value. As we
+  // are 1-index, a value 0 means unmodified
+  // TODO: Sparse matrix for large sizes.
+
+  // Swaps rows in an O(1) fashion by instead swapping their reference.
+  auto at(size_t row, size_t column) const
+  {
+    // TODO: As this swaps rows, we instead look up what the interpreted row
+    // will be.
+    return matrix.at(row_mapping[row], column);
+  }
+
+  constexpr static size_t rows()
+  {
+    return MatrixLike::rows();
+  }
+
+  constexpr static size_t cols()
+  {
+    return MatrixLike::cols();
+  }
+};
+
+// Dispatch to allow storage of rvalue, for example.
+template <typename T>
+_matrixRowSwapper(T &&val)->_matrixRowSwapper<T>;
+
 }  // end namespace detail
 
 template <typename E>
