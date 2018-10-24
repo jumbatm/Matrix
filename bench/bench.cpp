@@ -5,6 +5,8 @@
 
 #include "Matrix.hpp"
 
+constexpr size_t size = 5;
+
 template <typename Matrix, typename Column>
 static inline auto matrix_multiply(Matrix &&m, Column &&columnVector)
 {
@@ -37,7 +39,6 @@ static inline auto matrix_multiply(Matrix &&m, Column &&columnVector)
   return result;
 }
 
-constexpr size_t size = 2;
 
 auto compare = [](auto &&a, auto &&b) {
   static_assert(std::decay_t<decltype(a)>::rows()
