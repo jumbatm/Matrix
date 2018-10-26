@@ -490,7 +490,7 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
       double factor = augmented_matrix.at(i, j)
                       / augmented_matrix.at(j, j);  // Factor to reduce to 1.
       // Deal with our augmented_matrix.
-      for (size_t k = 1; k <= N + 1; ++k)
+      for (size_t k = j; k <= N + 1; ++k)
       {
         // Goes across row, carrying the multiplication from pivot onwards.
         augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
