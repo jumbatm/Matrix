@@ -515,21 +515,38 @@ auto backSubstitute(AugmentedMatrix &&augmented_matrix)
 
   constexpr size_t N = AugmentedMatrixT::rows();
 
-  Matrix<double, N, 1> result;
+  Matrix<double, N, 1> result;  // Construct a zero-matrix for our result.
 
+  // Solve the bottom equation. At this point, the augmented column in the input
+  // has values which were "brought along", possibly from Gaussian Elimination,
+  // in order to keep the system of equations equivalent. We're going to
+  // cheekily make a copy rather than editing augmented matrix.
   result.at(N, 1) = augmented_matrix.at(N, N + 1) / augmented_matrix.at(N, N);
-  // Back-substitution.
+  // Easy solve. For Ax = N: x = N / A.
+
+  // Start at the bottom row and go upwards.
   for (size_t i = N - 1; i >= 1; --i)
   {
     double sum = 0;
     for (size_t j = i + 1; j <= N; ++j)
     {
+      // This loop iterates through all variables which have already been solved
+      // in previous iterations of `i` for this given row. Then, we multiply the
+      // solved values by the coefficients given in this row and accumulate it.
+      // Algebraically, given equation Ax + B1, B2 ... Bn = N, where B 1 to n
+      // are constant (by the substitution described above), we are accumulating
+      // B terms to later subtract.
       sum += augmented_matrix.at(i, j) * result.at(j, 1);
     }
+    // Finally, we have all our B terms. If Ax + B = N, then x = (N - B) / A. B
+    // is our accmulated B terms `sum`, and we know that along the diagonal is
+    // the coefficient to the variable we are solving for - `A`. Hence, the
+    // expression below.
     result.at(i, 1) =
         (augmented_matrix.at(i, N + 1) - sum) / augmented_matrix.at(i, i);
   }
 
+  // All done!
   return result;
 }
 
