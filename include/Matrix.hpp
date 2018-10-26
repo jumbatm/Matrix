@@ -512,12 +512,13 @@ void backSubstitute(AugmentedMatrix &&augmented_matrix, Result &&result)
   // qualifies. Something for the
   // future.
   using AugmentedMatrixT = std::remove_reference_t<AugmentedMatrix>;
-  static_assert(AugmentedMatrixT::cols() == AugmentedMatrixT::rows() - 1,
+  static_assert(AugmentedMatrixT::cols() == AugmentedMatrixT::rows() + 1,
                 "The supplied Matrix needs to be an augmented square matrix of "
                 "size N-1 by N");
 
   static_assert(
-      std::is_same_v<std::remove_reference_t<Result>::value_type, double>,
+      std::is_same_v<typename std::remove_reference_t<Result>::value_type,
+                     double>,
       "Use a double type as the result.");
 
   constexpr size_t N = AugmentedMatrixT::rows();
