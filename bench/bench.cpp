@@ -5,7 +5,7 @@
 
 #include "Matrix.hpp"
 
-constexpr size_t size = 5;
+constexpr size_t size = 250;
 
 template <typename Matrix, typename Column>
 static inline auto matrix_multiply(Matrix &&m, Column &&columnVector)
