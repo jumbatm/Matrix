@@ -227,7 +227,6 @@ struct _matrixElementExpr
   }
 
   value_type at(const size_t row, const size_t column) const
-      noexcept  // Will force abort() on exception.
   {
     // TODO: Can this be dispatched statically?
     switch (op)
@@ -472,6 +471,71 @@ public:
 template <typename T>
 _matrixRowSwapper(T &&val)->_matrixRowSwapper<T>;
 
+// Takes a square matrix and uses naive Gaussian Elmination to transform an
+// agumanted matrix into upper row echelon form.
+template <typename MatrixLike>
+void toUpperEchelon(MatrixLike &&augmented_matrix)
+{
+  using MatrixLikeT = std::remove_reference_t<MatrixLike>;
+
+  static_assert(MatrixLikeT::rows() + 1 == MatrixLikeT::cols(),
+                "Input must be a square matrix that's been augmented with a "
+                "column solution vector.");
+  constexpr size_t N = MatrixLikeT::rows();
+
+  // Push to upper row echelon form.
+  for (size_t j = 1; j <= N; ++j)    // row
+    for (size_t i = 1; i <= N; ++i)  // column
+    {
+      if (i > j)  // We're in an upper triangle.
+      {
+        double factor = augmented_matrix.at(i, j)
+                        / augmented_matrix.at(j, j);  // Factor to reduce to 1.
+        // Deal with our augmented_matrix.
+        for (size_t k = 1; k <= N + 1; ++k)
+        {
+          // Goes across row, carrying the multiplication from pivot onwards.
+          augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
+        }
+      }
+    }
+}
+
+// Perform backsubstitution on a given matrix. Assumes that the far-right column
+// is the augmented column vector.
+template <typename AugmentedMatrix, typename Result>
+void backSubstitute(AugmentedMatrix &&augmented_matrix, Result &&result)
+{
+  // TODO: Must be an upper triangular matrix. Might be interestingly if we
+  // could enforce that at compile time as much as possible? Perhaps any matrix
+  // that goes through this function and hasn't been modified in certain ways
+  // qualifies. Something for the
+  // future.
+  using AugmentedMatrixT = std::remove_reference_t<AugmentedMatrix>;
+  static_assert(AugmentedMatrixT::cols() == AugmentedMatrixT::rows() - 1,
+                "The supplied Matrix needs to be an augmented square matrix of "
+                "size N-1 by N");
+
+  static_assert(
+      std::is_same_v<std::remove_reference_t<Result>::value_type, double>,
+      "Use a double type as the result.");
+
+  constexpr size_t N = AugmentedMatrixT::rows();
+
+  result.at(N, 1) = augmented_matrix.at(N, N + 1) / augmented_matrix.at(N, N);
+  // Back-substitution.
+  for (size_t i = N - 1; i >= 1; --i)
+  {
+    double sum = 0;
+    for (size_t j = i + 1; j <= N; ++j)
+    {
+      sum += augmented_matrix.at(i, j) * result.at(j, 1);
+    }
+    result.at(i, 1) =
+        (augmented_matrix.at(i, N + 1) - sum) / augmented_matrix.at(i, i);
+  }
+}
+
 }  // end namespace detail
 
 template <typename T, size_t N>
@@ -527,38 +591,12 @@ auto solve(MatrixLike &&A, ColumnVector &&b)
 
   constexpr auto N = MatrixType::cols();
 
+  // Reduce to upper row form so we can perform backsubstitution.
+  detail::toUpperEchelon(augmented_matrix);
+
   Matrix<double, N, 1> result;
-
-  // Push to upper row echelon form.
-  for (size_t j = 1; j <= N; ++j)    // row
-    for (size_t i = 1; i <= N; ++i)  // column
-    {
-      if (i > j)  // We're in an upper triangle.
-      {
-        double factor = augmented_matrix.at(i, j)
-                        / augmented_matrix.at(j, j);  // Factor to reduce to 1.
-        // Deal with our augmented_matrix.
-        for (size_t k = 1; k <= N + 1; ++k)
-        {
-          // Goes across row, carrying the multiplication from pivot onwards.
-          augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
-        }
-      }
-    }
-  // And, finally, the very bottom entry.
-  result.at(N, 1) = augmented_matrix.at(N, N + 1) / augmented_matrix.at(N, N);
-
-  // Back-substitution.
-  for (size_t i = N - 1; i >= 1; --i)
-  {
-    double sum = 0;
-    for (size_t j = i + 1; j <= N; ++j)
-    {
-      sum += augmented_matrix.at(i, j) * result.at(j, 1);
-    }
-    result.at(i, 1) =
-        (augmented_matrix.at(i, N + 1) - sum) / augmented_matrix.at(i, i);
-  }
+  // Perform back-substitution.
+  detail::backSubstitute(augmented_matrix, result);
 
   return result;
 }
