@@ -19,13 +19,7 @@ target_compile_options(bench
   -Wall
   -Wextra
   -Wpedantic
-  -Og
   -g
-  -pg
-  )
-
-target_link_libraries(bench
-  -pg
   )
 
 target_include_directories(bench
@@ -65,7 +59,6 @@ target_compile_options(Test
   -Wextra
   -Wpedantic
   -g
-  -pg
   )
 
 
