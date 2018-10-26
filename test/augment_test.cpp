@@ -1,5 +1,6 @@
 #include "Matrix.hpp"
 #include "catch.hpp"
+#include "mocks.hpp"
 
 using namespace mat;
 
@@ -17,4 +18,11 @@ TEST_CASE("Augment still allows access to the left matrix in the expected way.")
     {
       REQUIRE(aug.at(i, j) == expected++);
     }
+}
+
+TEST_CASE("Augmenting a matrix with glvalues does not cause a copy to be made.")
+{
+  mocks::Uncopyable t, d;
+
+  mat::augment(t, d);
 }

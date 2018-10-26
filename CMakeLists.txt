@@ -45,6 +45,7 @@ add_executable(Test
   test/inverse_test.cpp
   test/gaussian_test.cpp
   test/rowswapper_test.cpp
+  test/augment_test.cpp
   )
 
 target_include_directories(Test
