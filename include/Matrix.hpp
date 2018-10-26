@@ -503,8 +503,8 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
 
 // Perform backsubstitution on a given matrix. Assumes that the far-right column
 // is the augmented column vector.
-template <typename AugmentedMatrix, typename Result>
-void backSubstitute(AugmentedMatrix &&augmented_matrix, Result &&result)
+template <typename AugmentedMatrix>
+auto backSubstitute(AugmentedMatrix &&augmented_matrix)
 {
   // TODO: Must be an upper triangular matrix. Might be interestingly if we
   // could enforce that at compile time as much as possible? Perhaps any matrix
@@ -516,12 +516,9 @@ void backSubstitute(AugmentedMatrix &&augmented_matrix, Result &&result)
                 "The supplied Matrix needs to be an augmented square matrix of "
                 "size N-1 by N");
 
-  static_assert(
-      std::is_same_v<typename std::remove_reference_t<Result>::value_type,
-                     double>,
-      "Use a double type as the result.");
-
   constexpr size_t N = AugmentedMatrixT::rows();
+
+  Matrix<double, N, 1> result;
 
   result.at(N, 1) = augmented_matrix.at(N, N + 1) / augmented_matrix.at(N, N);
   // Back-substitution.
@@ -535,6 +532,8 @@ void backSubstitute(AugmentedMatrix &&augmented_matrix, Result &&result)
     result.at(i, 1) =
         (augmented_matrix.at(i, N + 1) - sum) / augmented_matrix.at(i, i);
   }
+
+  return result;
 }
 
 }  // end namespace detail
@@ -595,9 +594,8 @@ auto solve(MatrixLike &&A, ColumnVector &&b)
   // Reduce to upper row form so we can perform backsubstitution.
   detail::toUpperEchelon(augmented_matrix);
 
-  Matrix<double, N, 1> result;
   // Perform back-substitution.
-  detail::backSubstitute(augmented_matrix, result);
+  Matrix<double, N, 1> result = detail::backSubstitute(augmented_matrix);
 
   return result;
 }
