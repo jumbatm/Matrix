@@ -484,19 +484,16 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
   constexpr size_t N = MatrixLikeT::rows();
 
   // Push to upper row echelon form.
-  for (size_t j = 1; j <= N; ++j)    // row
-    for (size_t i = 1; i <= N; ++i)  // column
+  for (size_t j = 1; j <= N; ++j)        // row
+    for (size_t i = j + 1; i <= N; ++i)  // column
     {
-      if (i > j)  // We're in an upper triangle.
+      double factor = augmented_matrix.at(i, j)
+                      / augmented_matrix.at(j, j);  // Factor to reduce to 1.
+      // Deal with our augmented_matrix.
+      for (size_t k = 1; k <= N + 1; ++k)
       {
-        double factor = augmented_matrix.at(i, j)
-                        / augmented_matrix.at(j, j);  // Factor to reduce to 1.
-        // Deal with our augmented_matrix.
-        for (size_t k = 1; k <= N + 1; ++k)
-        {
-          // Goes across row, carrying the multiplication from pivot onwards.
-          augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
-        }
+        // Goes across row, carrying the multiplication from pivot onwards.
+        augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
       }
     }
 }
