@@ -490,23 +490,28 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
   constexpr size_t N = MatrixLikeT::rows();
 
   // Push to upper row echelon form.
-  for (size_t j = 1; j <= N; ++j)  // row.
+  for (size_t j = 1; j <= N; ++j)  // Which column we're working on.
   {
-    // We ceil to make sure we don't have leftover entries after
-    // running all threads. This guarantees that the work done in
-    // the last thread is less than all previous threads'.
-    const size_t rows_per_thread = std::floor((N - j + 1) / (NUM_THREADS - 1));
-    // Subtract 1 from NUM_THREADS to reserve one last thread for picking up the
-    // leftovers.
+    // For this column, we have this many rows to work on.
+    const size_t work_to_do         = N - j;
 
-    std::vector<std::thread> threads(NUM_THREADS);
-    // For each thread...
-    for (size_t thread = 0; thread < detail::NUM_THREADS; ++thread)
+    // Therefore, we need as many threads as we can. We avoid making more
+    // threads than we have.
+    const size_t threads_to_utilise = std::min(NUM_THREADS, work_to_do);
+    std::vector<std::thread> threads(threads_to_utilise);
+
+    // We calculate the number of rows each thread is going to do.
+    const size_t rows_per_thread =
+        std::ceil(work_to_do / float(threads_to_utilise));
+
+    // For each thread, corresponding with a block of rows:
+    for (size_t thread = 0; thread < threads.size(); ++thread)
     {
-      // Each thread has min(rows per thread, the number of entries left at the
-      // very end) amount of work to do.
+      // Figure out how many rows this thread will do in particular. For most
+      // threads, it will just be rows_per_thread, but the last thread needs to
+      // make sure it doesn't go off the bottom of the matrix.
       size_t this_threads_work = std::min(
-          rows_per_thread, this_threads_work - (thread * rows_per_thread));
+          rows_per_thread, rows_per_thread - (thread * rows_per_thread));
 
       // Determine the start and end row for this thread. A thread should
       // work from [start_index, stop_index). Because mat::Matrices are
@@ -531,6 +536,11 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
       });
     }
 
+    for (auto &thread : threads)
+    {
+      thread.join();
+    }
+
     /*
     for (size_t i = j + 1; i <= N; ++i)  // column. PARALLELISE THIS.
     {
@@ -547,10 +557,6 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
     }
     */
 
-    for (auto &thread : threads)
-    {
-      thread.join();
-    }
   }
 }
 
