@@ -5,7 +5,7 @@
 
 #include "Matrix.hpp"
 
-constexpr size_t size = 250;
+constexpr size_t size = 1000;
 
 template <typename Matrix, typename Column>
 static inline auto matrix_multiply(Matrix &&m, Column &&columnVector)
@@ -87,6 +87,10 @@ int main()
   {
     std::cerr << "Answer is not the same!\n";
     return -1;
+  }
+  else
+  {
+    std::cout << "Answer matches.\n";
   }
 
   return 0;
