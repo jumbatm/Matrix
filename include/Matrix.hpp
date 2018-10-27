@@ -497,16 +497,33 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
   {
     // For this column, we have this many rows to work on. This is equal to the
     // number of total below the diagonal m_jj, so N - j.
-    size_t work_to_do = N - j;
+    const size_t work_to_do = N - j;
 
-    // We calculate the number of rows each thread is going to do.
-    const size_t rows_per_thread =
+    // Assign a minimum value for work per thread. Measured in number of
+    // entries.
+    constexpr size_t minimum_work_per_thread = 1;
+
+    // How many columns to compute this column has.
+    const size_t columns_to_compute = N + 2 - j;
+
+    // We calculate the number of rows each thread is going to do. Initially, we
+    // delegate it evenly to however many threads there are.
+    size_t rows_per_thread =
         std::ceil(work_to_do / static_cast<float>(NUM_THREADS));
-    size_t start_row = j + 1;
 
-    for (; start_row <= N;
+    rows_per_thread = std::ceil(
+        rows_per_thread
+        * (static_cast<float>(minimum_work_per_thread) / columns_to_compute));
+
+    // How many entries in the matrix is each thread running on? We want to
+    // constrain and make sure that we aren't going through the process of
+    // creating a thread unnecessarily.
+
+    for (size_t start_row = j + 1; start_row <= N;
          start_row += rows_per_thread)  // until we run out of rows
     {
+      // Final inclusive row will either be just before the next one, or the
+      // thread is the last one so it'll be a bit less than that.
       size_t stop_row =
           start_row + std::min(rows_per_thread - 1, N - start_row);
 
@@ -525,7 +542,7 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
           }
         }
       }));
-    }
+      }
 
     for (auto &thread : threads)
     {
