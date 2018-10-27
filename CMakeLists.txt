@@ -19,7 +19,7 @@ target_compile_options(bench
   -Wall
   -Wextra
   -Wpedantic
-  -g
+  -O0
   )
 
 target_include_directories(bench
