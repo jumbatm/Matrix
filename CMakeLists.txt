@@ -22,6 +22,10 @@ target_compile_options(bench
   -O0
   )
 
+target_link_libraries(bench
+  pthread
+  )
+
 target_include_directories(bench
   PRIVATE
   include/
@@ -60,6 +64,10 @@ target_compile_options(Test
   -Wextra
   -Wpedantic
   -g
+  )
+
+target_link_libraries(Test
+  pthread
   )
 
 

@@ -3,12 +3,15 @@
 #define JUMBATM_MATRIX_HPP_INCLUDED
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
@@ -22,6 +25,9 @@ namespace mat
 {
 namespace detail
 {
+// Record the maximum number of threads we can have.
+const inline size_t NUM_THREADS = std::thread::hardware_concurrency();
+
 template <typename E>
 class _expression
 {
@@ -484,18 +490,68 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
   constexpr size_t N = MatrixLikeT::rows();
 
   // Push to upper row echelon form.
-  for (size_t j = 1; j <= N; ++j)        // row
-    for (size_t i = j + 1; i <= N; ++i)  // column
+  for (size_t j = 1; j <= N; ++j)  // row.
+  {
+    // We ceil to make sure we don't have leftover entries after
+    // running all threads. This guarantees that the work done in
+    // the last thread is less than all previous threads'.
+    const size_t rows_per_thread = std::floor((N - j + 1) / (NUM_THREADS - 1));
+    // Subtract 1 from NUM_THREADS to reserve one last thread for picking up the
+    // leftovers.
+
+    std::vector<std::thread> threads(NUM_THREADS);
+    // For each thread...
+    for (size_t thread = 0; thread < detail::NUM_THREADS; ++thread)
     {
-      double factor = augmented_matrix.at(i, j)
-                      / augmented_matrix.at(j, j);  // Factor to reduce to 1.
-      // Deal with our augmented_matrix.
+      // Each thread has min(rows per thread, the number of entries left at the
+      // very end) amount of work to do.
+      size_t this_threads_work = std::min(
+          rows_per_thread, this_threads_work - (thread * rows_per_thread));
+
+      // Determine the start and end row for this thread. A thread should
+      // work from [start_index, stop_index). Because mat::Matrices are
+      // 1-indexed (I know - sue me) we make sure we add 1 to both.
+      size_t start_index = thread * rows_per_thread + 1;
+      size_t stop_index  = start_index + this_threads_work + 1;
+
+      // Launch the thread with this start and stop index.
+      threads[thread] = std::thread([=, &augmented_matrix]() {
+        for (size_t i = start_index; i < stop_index; ++i)
+        {
+          // This loop determines which column to work with. It's here that we
+          double factor =
+              augmented_matrix.at(i, j)
+              / augmented_matrix.at(j, j);  // Factor to reduce to 1.
+
+          for (size_t k = j; j <= N + 1; ++k)
+          {
+            augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
+          }
+        }
+      });
+    }
+
+    /*
+    for (size_t i = j + 1; i <= N; ++i)  // column. PARALLELISE THIS.
+    {
+      // Every row below the row of the diagonal can be run in parallel. First,
+      // we need to determine how to split the work off. The number of rows that
+      // need to be run for column j is equal to N - j + 1.
+
+      // Each thread will be dispatched to do this work.
       for (size_t k = j; k <= N + 1; ++k)
       {
         // Goes across row, carrying the multiplication from pivot onwards.
         augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
       }
     }
+    */
+
+    for (auto &thread : threads)
+    {
+      thread.join();
+    }
+  }
 }
 
 // Perform backsubstitution on a given matrix. Assumes that the far-right column
