@@ -489,40 +489,30 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
                 "column solution vector.");
   constexpr size_t N = MatrixLikeT::rows();
 
+  std::vector<std::thread> threads;
+  threads.reserve(NUM_THREADS);
+
   // Push to upper row echelon form.
   for (size_t j = 1; j <= N; ++j)  // Which column we're working on.
   {
     // For this column, we have this many rows to work on. This is equal to the
     // number of total below the diagonal m_jj, so N - j.
-    const size_t work_to_do = N - j;
-
-    // Therefore, we need as many threads as we can.
-    // We avoid making more threads than we have.
-    const size_t threads_to_utilise = std::min(NUM_THREADS, work_to_do);
-    std::vector<std::thread> threads(threads_to_utilise);
+    size_t work_to_do = N - j;
 
     // We calculate the number of rows each thread is going to do.
     const size_t rows_per_thread =
-        std::ceil(work_to_do / float(threads_to_utilise));
+        std::ceil(work_to_do / static_cast<float>(NUM_THREADS));
+    size_t start_row = j + 1;
 
-    // For each thread, corresponding with a block of rows:
-    for (size_t thread = 0; thread < threads.size(); ++thread)
+    for (; start_row <= N;
+         start_row += rows_per_thread)  // until we run out of rows
     {
-      // Figure out how many rows this thread will do in particular. For most
-      // threads, it will just be rows_per_thread, but the last thread needs to
-      // make sure it doesn't go off the bottom of the matrix.
-      size_t this_threads_work =
-          std::min(rows_per_thread, work_to_do - (thread * rows_per_thread));
-
-      // Determine the start and end row for this thread. A thread should
-      // work from [start_index, stop_row). Because mat::Matrices are
-      // 1-indexed (I know - sue me) we make sure we add 1 to both.
-      size_t start_row   = thread * rows_per_thread + j + 1;
-      size_t stop_row    = start_row + this_threads_work;
+      size_t stop_row =
+          start_row + std::min(rows_per_thread - 1, work_to_do - start_row);
 
       // Launch the thread with this start and stop index.
-      threads[thread] = std::thread([=, &augmented_matrix]() {
-        for (size_t i = start_row; i < stop_row; ++i)
+      threads.push_back(std::thread([=, &augmented_matrix]() {
+        for (size_t i = start_row; i <= stop_row; ++i)
         {
           // This loop determines which column to work with. It's here that we
           double factor =
@@ -534,15 +524,16 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
             augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
           }
         }
-      });
+      }));
     }
 
     for (auto &thread : threads)
     {
       thread.join();
     }
+    threads.clear();
 
-    /*
+    /* for j ...
     for (size_t i = j + 1; i <= N; ++i)  // column. PARALLELISE THIS.
     {
       // Every row below the row of the diagonal can be run in parallel. First,
@@ -557,7 +548,6 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
       }
     }
     */
-
   }
 }
 
