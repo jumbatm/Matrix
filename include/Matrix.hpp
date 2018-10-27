@@ -503,7 +503,7 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
 
     // We calculate the number of rows each thread is going to do.
     const size_t rows_per_thread =
-        std::floor(work_to_do / float(threads_to_utilise));
+        std::ceil(work_to_do / float(threads_to_utilise));
 
     // For each thread, corresponding with a block of rows:
     for (size_t thread = 0; thread < threads.size(); ++thread)
