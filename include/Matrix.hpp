@@ -508,7 +508,7 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
          start_row += rows_per_thread)  // until we run out of rows
     {
       size_t stop_row =
-          start_row + std::min(rows_per_thread - 1, work_to_do - start_row);
+          start_row + std::min(rows_per_thread - 1, N - start_row);
 
       // Launch the thread with this start and stop index.
       threads.push_back(std::thread([=, &augmented_matrix]() {
