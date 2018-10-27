@@ -11,6 +11,9 @@ TEST_CASE("Solve 2x2 correctly.")
   Matrix<double, 2, 1> solveFor = { { 30 }, { 90 } };
 
   auto result = solve(toSolve, solveFor);
+
+  // By inspection, we can see that result = [ 30; 0].
+  REQUIRE(result.at(1, 1) == 30 && result.at(2, 1) == 0);
 }
 
 TEST_CASE("Solve correctly returns the solved column vector.")
