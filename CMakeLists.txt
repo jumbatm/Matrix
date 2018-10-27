@@ -20,6 +20,7 @@ target_compile_options(bench
   -Wextra
   -Wpedantic
   -O0
+  -g
   )
 
 target_link_libraries(bench

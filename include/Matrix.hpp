@@ -510,25 +510,25 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
       // Figure out how many rows this thread will do in particular. For most
       // threads, it will just be rows_per_thread, but the last thread needs to
       // make sure it doesn't go off the bottom of the matrix.
-      size_t this_threads_work = std::min(
-          rows_per_thread, rows_per_thread - (thread * rows_per_thread));
+      size_t this_threads_work =
+          std::min(rows_per_thread, work_to_do - (thread * rows_per_thread));
 
       // Determine the start and end row for this thread. A thread should
-      // work from [start_index, stop_index). Because mat::Matrices are
+      // work from [start_index, stop_row). Because mat::Matrices are
       // 1-indexed (I know - sue me) we make sure we add 1 to both.
-      size_t start_index = thread * rows_per_thread + 1;
-      size_t stop_index  = start_index + this_threads_work + 1;
+      size_t start_row   = thread * rows_per_thread + j + 1;
+      size_t stop_row    = start_row + this_threads_work;
 
       // Launch the thread with this start and stop index.
       threads[thread] = std::thread([=, &augmented_matrix]() {
-        for (size_t i = start_index; i < stop_index; ++i)
+        for (size_t i = start_row; i < stop_row; ++i)
         {
           // This loop determines which column to work with. It's here that we
           double factor =
               augmented_matrix.at(i, j)
               / augmented_matrix.at(j, j);  // Factor to reduce to 1.
 
-          for (size_t k = j; j <= N + 1; ++k)
+          for (size_t k = j; k <= N + 1; ++k)
           {
             augmented_matrix.at(i, k) -= factor * augmented_matrix.at(j, k);
           }
