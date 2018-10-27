@@ -501,19 +501,18 @@ void toUpperEchelon(MatrixLike &&augmented_matrix)
 
     // Assign a minimum value for work per thread. Measured in number of
     // entries.
-    constexpr size_t minimum_work_per_thread = 1;
+    constexpr size_t minimum_work_per_thread = 100;
 
     // How many columns to compute this column has.
-    const size_t columns_to_compute = N + 2 - j;
+    const size_t columns_to_compute = N + 1 - j;
 
     // We calculate the number of rows each thread is going to do. Initially, we
     // delegate it evenly to however many threads there are.
     size_t rows_per_thread =
         std::ceil(work_to_do / static_cast<float>(NUM_THREADS));
 
-    rows_per_thread = std::ceil(
-        rows_per_thread
-        * (static_cast<float>(minimum_work_per_thread) / columns_to_compute));
+    rows_per_thread *= std::ceil(static_cast<float>(minimum_work_per_thread)
+                                 / (columns_to_compute * work_to_do));
 
     // How many entries in the matrix is each thread running on? We want to
     // constrain and make sure that we aren't going through the process of
